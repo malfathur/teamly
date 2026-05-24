@@ -1,0 +1,2294 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teamly — Admin</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      min-height: 100vh;
+    }
+    .topbar {
+      background: #0f172a;
+      color: white;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .topbar h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.35rem;
+      color: #818cf8;
+      font-weight: 900;
+      letter-spacing: 4px;
+    }
+    .btn-logout {
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.08);
+      color: #cbd5e1;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+      transition: background 0.15s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.15); color: white; }
+    .container { max-width: 960px; margin: 0 auto; padding: 28px 20px; }
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 28px 32px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+      margin-bottom: 20px;
+      border: 1px solid #f1f5f9;
+    }
+    .card h2 {
+      font-family: 'Open Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #94a3b8;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+    }
+
+    /* User table */
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { text-align: left; padding: 10px 12px; color: #718096; font-weight: 600; font-family: 'Open Sans', sans-serif; border-bottom: 2px solid #e2e8f0; }
+    td { padding: 12px; border-bottom: 1px solid #f0f4f8; color: #2d3748; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: 'Open Sans', sans-serif;
+    }
+    .badge-superadmin { background: #fed7d7; color: #c53030; }
+    .badge-hod        { background: #fefcbf; color: #744210; }
+    .badge-approver_a { background: #c6f6d5; color: #22543d; }
+    .badge-user       { background: #e2e8f0; color: #4a5568; }
+
+    /* Add user form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 20px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 0.85rem; font-weight: 600; font-family: 'Open Sans', sans-serif; color: #4a5568; }
+    input, select {
+      padding: 10px 12px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #1e293b;
+      background: #f8fafc;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.15s;
+      font-family: 'Open Sans', sans-serif;
+    }
+    input:focus, select:focus {
+      border-color: #4f46e5;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.12);
+    }
+
+    .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; font-family: 'Open Sans', sans-serif; transition: opacity 0.15s; }
+    .btn-primary { background: #4f46e5; color: #fff; }
+    .btn-primary:hover { background: #4338ca; }
+    .btn-danger  { background: #dc2626; color: #fff; }
+    .btn-danger:hover  { opacity: 0.9; }
+    .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+
+    .toast {
+      display: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      margin-top: 14px;
+    }
+    .toast.success { background: #c6f6d5; color: #22543d; }
+    .toast.error   { background: #fed7d7; color: #742a2a; }
+
+    .phase-note {
+      background: #eef2ff;
+      border-left: 4px solid #6366f1;
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      color: #3730a3;
+      font-family: 'Open Sans', sans-serif;
+      margin-bottom: 24px;
+    }
+
+    /* Edit modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 540px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal h2 { font-family: 'Open Sans', sans-serif; font-size: 1rem; font-weight: 700; color: #2d3748; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+
+    .btn-edit { background: #6366f1; color: #fff; }
+    .btn-edit:hover { opacity: 0.9; }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1 id="topbarTitle">TEAMLY</h1>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button id="btnUserConsole" class="btn-logout" style="display:none" onclick="window.location.href='/dashboard.html'">← User Console</button>
+    <button class="btn-logout" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<!-- Tab bar -->
+<div style="background:white;border-bottom:1px solid #e2e8f0;overflow-x:auto;position:sticky;top:60px;z-index:90;">
+  <div style="max-width:960px;margin:0 auto;display:flex;padding:0 16px;gap:2px;">
+    <button class="tab-btn" id="tab-overview" onclick="setTab('overview')" style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#94a3b8;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">Overview <span id="overviewBadge" style="display:none;margin-left:5px;padding:1px 7px;background:#dc2626;color:#fff;border-radius:20px;font-size:0.72rem;"></span></button>
+    <button class="tab-btn" id="tab-clock"    onclick="setTab('clock')"    style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#94a3b8;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">Clock</button>
+    <button class="tab-btn" id="tab-users"    onclick="setTab('users')"    style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#94a3b8;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">Users</button>
+    <button class="tab-btn" id="tab-balances" onclick="setTab('balances')" style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#94a3b8;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">AL Balances</button>
+    <button class="tab-btn" id="tab-claims"   onclick="setTab('claims')"   style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#94a3b8;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">Claims</button>
+    <button class="tab-btn" id="tab-tracking" onclick="setTab('tracking')" style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#94a3b8;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">Tracking</button>
+    <button class="tab-btn" id="tab-holidays" onclick="setTab('holidays')" style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#94a3b8;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">Public Holidays</button>
+    <button class="tab-btn" id="tab-blackout" onclick="setTab('blackout')" style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#94a3b8;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">Blackout Dates</button>
+    <button class="tab-btn" id="tab-export"   onclick="setTab('export')"   style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#94a3b8;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">CSV Export</button>
+    <button class="tab-btn" id="tab-reset"    onclick="setTab('reset')"    style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#dc2626;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">DB Reset</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ══ OVERVIEW TAB ══ -->
+  <div id="section-overview">
+
+    <!-- Summary counts -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;">
+      <div style="background:#fff;border-radius:10px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.06),0 4px 16px rgba(0,0,0,0.04);border:1px solid #f1f5f9;border-left:4px solid #f6ad55;">
+        <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#718096;font-family:'Open Sans',sans-serif;margin-bottom:8px;">Pending Leave</div>
+        <div id="ovCountLeave" style="font-size:2rem;font-weight:700;color:#2d3748;font-family:'Open Sans',sans-serif;">—</div>
+        <div style="font-size:0.8rem;color:#a0aec0;margin-top:4px;">awaiting decision</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.06),0 4px 16px rgba(0,0,0,0.04);border:1px solid #f1f5f9;border-left:4px solid #63b3ed;">
+        <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#718096;font-family:'Open Sans',sans-serif;margin-bottom:8px;">Pending WFH</div>
+        <div id="ovCountWfh" style="font-size:2rem;font-weight:700;color:#2d3748;font-family:'Open Sans',sans-serif;">—</div>
+        <div style="font-size:0.8rem;color:#a0aec0;margin-top:4px;">awaiting decision</div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,0.06),0 4px 16px rgba(0,0,0,0.04);border:1px solid #f1f5f9;border-left:4px solid #68d391;">
+        <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#718096;font-family:'Open Sans',sans-serif;margin-bottom:8px;">Claims in Progress</div>
+        <div id="ovCountClaims" style="font-size:2rem;font-weight:700;color:#2d3748;font-family:'Open Sans',sans-serif;">—</div>
+        <div style="font-size:0.8rem;color:#a0aec0;margin-top:4px;">pending or payment pending</div>
+      </div>
+    </div>
+
+    <!-- Pending Leave -->
+    <div class="card">
+      <h2 style="display:flex;justify-content:space-between;align-items:center;">
+        Pending Leave Requests
+        <button class="btn btn-primary" onclick="loadOverview()" style="font-size:0.8rem;padding:6px 14px;">Refresh</button>
+      </h2>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Ref</th><th>Employee</th><th>Type</th><th>Dates</th><th>Days</th><th>Reason</th><th>Submitted</th><th></th>
+          </tr></thead>
+          <tbody id="ovLeaveBody">
+            <tr><td colspan="7" style="color:#a0aec0;text-align:center;padding:24px;">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pending WFH -->
+    <div class="card">
+      <h2>Pending WFH Requests</h2>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Ref</th><th>Employee</th><th>Date</th><th>Reason</th><th>Submitted</th><th></th>
+          </tr></thead>
+          <tbody id="ovWfhBody">
+            <tr><td colspan="5" style="color:#a0aec0;text-align:center;padding:24px;">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Claims in progress -->
+    <div class="card">
+      <h2>Claims Awaiting Action</h2>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Ref</th><th>Employee</th><th>Item</th><th style="text-align:right;">Amount</th><th>Status</th><th>Submitted</th><th></th>
+          </tr></thead>
+          <tbody id="ovClaimsBody">
+            <tr><td colspan="7" style="color:#a0aec0;text-align:center;padding:24px;">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="toast" id="ovClaimToast" style="margin-top:12px;"></div>
+    </div>
+
+  </div><!-- /section-overview -->
+
+  <!-- ══ USERS TAB ══ -->
+  <div id="section-users">
+
+  <!-- Add User -->
+  <div class="card">
+    <h2>Add New User</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="newName" placeholder="e.g. Jordan Lee" />
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="newUsername" placeholder="e.g. jsmith" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="newEmail" placeholder="e.g. jordan@example.com" />
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="newRole">
+          <option value="user">User</option>
+          <option value="hod">HOD</option>
+          <option value="approver_a">Approver A</option>
+          <option value="superadmin">Super Admin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Department</label>
+        <select id="newDept">
+          <option value="">— Select Department —</option>
+          <option value="Operation">Operation</option>
+          <option value="IT">IT</option>
+          <option value="Science">Science</option>
+          <option value="Production">Production</option>
+          <option value="Sales and Marketing">Sales and Marketing</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Others Approver (Sick / Emergency / WFH)</label>
+        <select id="newHod"><option value="">— Select Approver —</option></select>
+      </div>
+      <div class="form-group">
+        <label>AL / UPL Approver</label>
+        <select id="newAlApprover"><option value="">— Select Approver —</option></select>
+      </div>
+      <div class="form-group">
+        <label>Claims Approver</label>
+        <select id="newClaimApprover"><option value="">— Select Approver —</option></select>
+      </div>
+      <div class="form-group">
+        <label>Timezone</label>
+        <select id="newTimezone">
+          <option value="Asia/Kuala_Lumpur">Asia/Kuala_Lumpur (MYT, UTC+8)</option>
+          <option value="Europe/London">Europe/London (GMT/BST)</option>
+          <option value="America/New_York">America/New_York (ET)</option>
+          <option value="America/Los_Angeles">America/Los_Angeles (PT)</option>
+          <option value="Asia/Singapore">Asia/Singapore (SGT, UTC+8)</option>
+          <option value="Asia/Dubai">Asia/Dubai (GST, UTC+4)</option>
+          <option value="UTC">UTC</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <button class="btn btn-primary" onclick="addUser()">Add User</button>
+        <div class="toast" id="addToast"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users List -->
+  <div class="card">
+    <h2>All Users</h2>
+    <div id="usersTableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Department</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="usersBody">
+          <tr><td colspan="6" style="color:#a0aec0;text-align:center;padding:24px;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+  </div><!-- /section-users -->
+
+  <!-- ══ AL BALANCES TAB ══ -->
+  <div id="section-balances" style="display:none">
+    <div class="card">
+      <h2>AL Balances</h2>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:20px;">
+        <label style="font-size:0.85rem;font-weight:600;color:#4a5568;">Year</label>
+        <select id="balYear" onchange="loadBalances()" style="padding:8px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;box-shadow:2px 2px 0 #e2e8f0;">
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+          <option value="2026" selected>2026</option>
+          <option value="2027">2027</option>
+        </select>
+        <button class="btn btn-primary" onclick="loadBalances()">Refresh</button>
+      </div>
+      <div id="balToast" class="toast" style="margin-bottom:12px;"></div>
+      <div id="balancesTableWrap">
+        <table>
+          <thead><tr>
+            <th>Employee</th><th>Dept</th>
+            <th style="text-align:right;">Carry-Fwd A</th>
+            <th style="text-align:right;">Current Yr B</th>
+            <th style="text-align:right;">Used A</th>
+            <th style="text-align:right;">Used B</th>
+            <th style="text-align:right;">Balance</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="balancesBody">
+            <tr><td colspan="8" style="color:#a0aec0;text-align:center;padding:24px;">Loading…</td></tr>
+          </tbody>
+          <tfoot>
+            <tr><td colspan="8" style="padding-top:16px;">
+              <div style="font-size:0.8rem;color:#718096;line-height:1.8;">
+                <strong>Carry-Fwd A</strong> — Leftover days from previous year. Max 7 days. Expires 31 March.<br>
+                <strong>Current Yr B</strong> — This year's AL allocation set by admin.<br>
+                <strong>Used A / Used B</strong> — Days already consumed from each bucket. A is deducted first.<br>
+                <strong>Balance</strong> — Total remaining days (A + B minus used). Does not account for March 31 expiry of A.
+              </div>
+              <div style="font-size:0.75rem;color:#a0aec0;margin-top:8px;">Records are auto-created when an employee first checks their balance. Delete removes the record for that year only.</div>
+            </td></tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div><!-- /section-balances -->
+
+  <!-- Edit Balance Modal -->
+  <div class="modal-overlay" id="balModal">
+    <div class="modal" style="max-width:400px;">
+      <h2>Edit AL Balance</h2>
+      <p id="balModalName" style="font-size:0.9rem;color:#718096;margin-bottom:20px;"></p>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group">
+          <label>Carry-Forward (Bucket A)</label>
+          <input type="number" id="balBucketA" min="0" max="7" step="0.5" />
+        </div>
+        <div class="form-group">
+          <label>Current Year (Bucket B)</label>
+          <input type="number" id="balBucketB" min="0" step="0.5" />
+        </div>
+        <div class="form-group">
+          <label>Used A</label>
+          <input type="number" id="balUsedA" min="0" step="0.5" />
+        </div>
+        <div class="form-group">
+          <label>Used B</label>
+          <input type="number" id="balUsedB" min="0" step="0.5" />
+        </div>
+      </div>
+      <div class="toast" id="balModalToast"></div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="saveBalance()">Save</button>
+        <button class="btn" style="background:#e2e8f0;color:#4a5568;" onclick="closeBalModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ BLACKOUT DATES TAB ══ -->
+  <!-- ══ PUBLIC HOLIDAYS TAB ══ -->
+  <div id="section-holidays" style="display:none">
+    <div class="card">
+      <h2>Add Public Holiday</h2>
+      <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="margin:0;min-width:160px;">
+          <label>Date</label>
+          <input type="date" id="phDate" />
+        </div>
+        <div class="form-group" style="margin:0;min-width:160px;">
+          <label>End Date <span style="color:#a0aec0;font-weight:400;">(leave blank for single day)</span></label>
+          <input type="date" id="phEndDate" />
+        </div>
+        <div class="form-group" style="margin:0;flex:2;min-width:200px;">
+          <label>Holiday Name</label>
+          <input type="text" id="phName" placeholder="e.g. New Year's Day" />
+        </div>
+        <div class="form-group" style="margin:0;min-width:100px;">
+          <label>Region</label>
+          <select id="phRegion">
+            <option value="MY">🇲🇾 MY</option>
+            <option value="UK">🇬🇧 UK</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="addHoliday()" style="flex-shrink:0;">Add</button>
+      </div>
+      <div class="toast" id="phToast" style="margin-top:12px;"></div>
+    </div>
+    <div class="card">
+      <h2 style="display:flex;justify-content:space-between;align-items:center;">
+        Public Holidays
+        <button class="btn btn-danger btn-sm" onclick="clearAllHolidays()" style="font-size:0.8rem;">Clear All</button>
+      </h2>
+      <div id="holidayList">
+        <p style="color:#a0aec0;font-size:0.9rem;">Loading…</p>
+      </div>
+    </div>
+  </div><!-- /section-holidays -->
+
+  <div id="section-blackout" style="display:none">
+    <div class="card">
+      <h2>Add Blackout Date / Range</h2>
+      <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="margin:0;min-width:160px;">
+          <label>Start Date</label>
+          <input type="date" id="boStartDate" />
+        </div>
+        <div class="form-group" style="margin:0;min-width:160px;">
+          <label>End Date <span style="color:#a0aec0;font-weight:400;">(leave blank for single day)</span></label>
+          <input type="date" id="boEndDate" />
+        </div>
+        <div class="form-group" style="margin:0;flex:2;min-width:200px;">
+          <label>Reason (optional)</label>
+          <input type="text" id="boReason" placeholder="e.g. Public Holiday" />
+        </div>
+        <button class="btn btn-primary" onclick="addBlackout()" style="flex-shrink:0;">Add</button>
+      </div>
+      <div class="toast" id="boToast" style="margin-top:12px;"></div>
+    </div>
+    <div class="card">
+      <h2>Blackout Dates</h2>
+      <div id="blackoutList">
+        <p style="color:#a0aec0;font-size:0.9rem;">Loading…</p>
+      </div>
+    </div>
+  </div><!-- /section-blackout -->
+
+  <!-- ══ CLAIMS TAB ══ -->
+  <div id="section-claims" style="display:none">
+    <div class="card">
+      <h2 style="display:flex;justify-content:space-between;align-items:center;">
+        All Claims
+        <button class="btn btn-primary" onclick="loadAdminClaims()" style="font-size:0.8rem;padding:6px 14px;">Refresh</button>
+      </h2>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end;">
+        <div class="form-group" style="margin:0;">
+          <label>Filter Status</label>
+          <select id="claimFilterStatus" onchange="renderAdminClaims()" style="padding:8px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;box-shadow:2px 2px 0 #e2e8f0;">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="payment_pending">Payment Pending</option>
+            <option value="paid">Paid</option>
+            <option value="rejected">Rejected</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="toast" id="claimAdminToast" style="margin-bottom:12px;"></div>
+      <div id="claimsAdminWrap" style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Ref</th><th>Employee</th><th>Item</th>
+            <th style="text-align:right;">Amount</th>
+            <th>Category</th><th>Dept</th>
+            <th>Status</th><th>Submitted</th><th></th>
+          </tr></thead>
+          <tbody id="claimsAdminBody">
+            <tr><td colspan="9" style="color:#a0aec0;text-align:center;padding:24px;">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- /section-claims -->
+
+  <!-- ══ OVERRIDE MODAL ══ -->
+  <div class="modal-overlay" id="overrideModal">
+    <div class="modal" style="max-width:440px;">
+      <h2 id="overrideModalTitle">Override Request</h2>
+      <p style="font-size:0.875rem;color:#718096;margin-bottom:16px;">Set a new status for this request. This action is logged.</p>
+      <div class="form-group">
+        <label>New Status</label>
+        <select id="overrideStatus" style="padding:10px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;width:100%;box-shadow:2px 2px 0 #e2e8f0;"></select>
+      </div>
+      <div class="form-group">
+        <label>Reason <span style="color:#a0aec0;font-weight:400;">(optional)</span></label>
+        <textarea id="overrideReason" rows="3" placeholder="Why is this being overridden?" style="width:100%;padding:10px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;resize:vertical;box-sizing:border-box;"></textarea>
+      </div>
+      <div class="toast" id="overrideToast"></div>
+      <div class="modal-actions">
+        <button class="btn" style="background:#744210;color:#fff;" onclick="confirmOverride()">Confirm Override</button>
+        <button class="btn" style="background:#e2e8f0;color:#4a5568;" onclick="closeOverrideModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Claim Reject Modal (admin) -->
+  <div class="modal-overlay" id="claimRejectModal">
+    <div class="modal" style="max-width:420px;">
+      <h2>Reject Claim</h2>
+      <p style="font-size:0.875rem;color:#718096;margin-bottom:16px;">Provide a reason — the employee will see this.</p>
+      <div class="form-group">
+        <label>Rejection Reason</label>
+        <textarea id="claimRejectReason" rows="3" style="width:100%;padding:10px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;resize:vertical;"></textarea>
+      </div>
+      <div class="toast" id="claimRejectToast"></div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" onclick="confirmRejectClaim()">Confirm Rejection</button>
+        <button class="btn" style="background:#e2e8f0;color:#4a5568;" onclick="closeClaimRejectModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TRACKING TAB ══ -->
+  <div id="section-tracking" style="display:none">
+    <div class="card">
+      <h2 style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        Request Tracking
+        <div style="display:flex;gap:6px;align-items:center;">
+          <div style="display:flex;border:1.5px solid #cbd5e0;border-radius:8px;overflow:hidden;">
+            <button id="trackViewBtn-table" onclick="setTrackView('table')" style="padding:5px 14px;font-size:0.82rem;font-weight:600;border:none;cursor:pointer;font-family:'Open Sans',sans-serif;background:#4f46e5;color:#fff;">Table</button>
+            <button id="trackViewBtn-month" onclick="setTrackView('month')" style="padding:5px 14px;font-size:0.82rem;font-weight:600;border:none;cursor:pointer;font-family:'Open Sans',sans-serif;background:#e2e8f0;color:#4a5568;">Month</button>
+            <button id="trackViewBtn-week"  onclick="setTrackView('week')"  style="padding:5px 14px;font-size:0.82rem;font-weight:600;border:none;cursor:pointer;font-family:'Open Sans',sans-serif;background:#e2e8f0;color:#4a5568;">Week</button>
+          </div>
+          <button class="btn btn-primary" onclick="loadTracking()" style="font-size:0.8rem;padding:6px 14px;">Refresh</button>
+        </div>
+      </h2>
+
+      <!-- Filters -->
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end;">
+        <div class="form-group" style="margin:0;">
+          <label>Employee</label>
+          <input type="text" id="trackFilterEmployee" placeholder="Search name…" oninput="renderTracking()"
+            style="padding:8px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;box-shadow:2px 2px 0 #e2e8f0;width:160px;" />
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>Type</label>
+          <select id="trackFilterType" onchange="renderTracking()" style="padding:8px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;box-shadow:2px 2px 0 #e2e8f0;">
+            <option value="">All</option>
+            <option value="AL">AL</option>
+            <option value="sick">Sick</option>
+            <option value="emergency">Emergency</option>
+            <option value="comp_off">Comp Off</option>
+            <option value="UPL">UPL</option>
+            <option value="wfh">WFH</option>
+            <option value="claim">Claim</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>Status</label>
+          <select id="trackFilterStatus" onchange="renderTracking()" style="padding:8px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;box-shadow:2px 2px 0 #e2e8f0;">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="payment_pending">Payment Pending</option>
+            <option value="paid">Paid</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>Department</label>
+          <select id="trackFilterDept" onchange="renderTracking()" style="padding:8px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;box-shadow:2px 2px 0 #e2e8f0;">
+            <option value="">All</option>
+            <option value="Operation">Operation</option>
+            <option value="IT">IT</option>
+            <option value="Science">Science</option>
+            <option value="Production">Production</option>
+            <option value="Sales and Marketing">Sales and Marketing</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>From</label>
+          <input type="date" id="trackFilterFrom" onchange="renderTracking()"
+            style="padding:8px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;box-shadow:2px 2px 0 #e2e8f0;" />
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>To</label>
+          <input type="date" id="trackFilterTo" onchange="renderTracking()"
+            style="padding:8px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;box-shadow:2px 2px 0 #e2e8f0;" />
+        </div>
+        <div class="form-group" style="margin:0;align-self:flex-end;">
+          <button class="btn" style="background:#e2e8f0;color:#4a5568;padding:8px 14px;" onclick="clearTrackFilters()">Clear</button>
+        </div>
+      </div>
+
+      <!-- Table view -->
+      <div id="trackTableView">
+        <div id="trackCount" style="font-size:0.82rem;color:#718096;margin-bottom:10px;"></div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead><tr>
+              <th>Ref</th><th>Employee</th><th>Dept</th><th>Type</th>
+              <th>Date(s)</th><th>Days</th><th>Status</th><th>Approver</th><th>Submitted</th><th></th>
+            </tr></thead>
+            <tbody id="trackingBody">
+              <tr><td colspan="10" style="color:#a0aec0;text-align:center;padding:24px;">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Month view -->
+      <div id="trackMonthView" style="display:none;">
+        <p style="font-size:0.8rem;color:#a0aec0;margin-bottom:12px;">Showing leave &amp; WFH only. Claims excluded from calendar.</p>
+        <div id="trackMonthGrid"></div>
+      </div>
+
+      <!-- Week view -->
+      <div id="trackWeekView" style="display:none;">
+        <p style="font-size:0.8rem;color:#a0aec0;margin-bottom:12px;">Showing leave &amp; WFH only. Each row is one employee.</p>
+        <div id="trackWeekGrid"></div>
+      </div>
+    </div>
+
+    <!-- Detail panel -->
+    <div id="trackDetailPanel" style="display:none;">
+      <div class="card" style="border-left:4px solid #4f46e5;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+          <h2 style="margin:0;" id="trackDetailTitle">Request Detail</h2>
+          <button onclick="closeTrackDetail()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#718096;line-height:1;">×</button>
+        </div>
+        <div id="trackDetailBody" style="font-size:0.9rem;line-height:1.8;color:#4a5568;"></div>
+      </div>
+    </div>
+  </div><!-- /section-tracking -->
+
+  <!-- ══ CSV EXPORT TAB ══ -->
+  <div id="section-export" style="display:none">
+    <div class="card">
+      <h2>CSV Export</h2>
+      <p style="font-size:0.875rem;color:#718096;margin-bottom:24px;">Download any table as a CSV file. Large blob columns (MC attachments, receipts) are excluded automatically.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;">
+        <a class="btn btn-primary" href="/api/admin/export/users"          id="exp-users"   style="text-decoration:none;text-align:center;">Download Users</a>
+        <a class="btn btn-primary" href="/api/admin/export/leave_requests" id="exp-leave"   style="text-decoration:none;text-align:center;">Download Leave Requests</a>
+        <a class="btn btn-primary" href="/api/admin/export/wfh_requests"   id="exp-wfh"     style="text-decoration:none;text-align:center;">Download WFH Requests</a>
+        <a class="btn btn-primary" href="/api/admin/export/claims"         id="exp-claims"  style="text-decoration:none;text-align:center;">Download Claims</a>
+        <a class="btn btn-primary" href="/api/admin/export/leave_balances" id="exp-bal"     style="text-decoration:none;text-align:center;">Download Leave Balances</a>
+        <a class="btn btn-primary" href="/api/admin/export/clock_records"  id="exp-clock"   style="text-decoration:none;text-align:center;">Download Clock Records</a>
+      </div>
+    </div>
+  </div><!-- /section-export -->
+
+  <!-- ══ CLOCK TAB ══ -->
+  <div id="section-clock" style="display:none">
+    <!-- Settings card -->
+    <div class="card">
+      <h2>Clock Settings</h2>
+      <p style="font-size:0.875rem;color:#718096;margin-bottom:16px;">Set the acceptable clock-in window. Clocking in after <strong>Window End</strong> is flagged as late.</p>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="form-group" style="margin:0;">
+          <label>Window Start (earliest clock-in)</label>
+          <input type="time" id="clockWindowStart" value="08:00" style="padding:8px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;box-shadow:2px 2px 0 #e2e8f0;" />
+        </div>
+        <div class="form-group" style="margin:0;">
+          <label>Window End (latest on-time)</label>
+          <input type="time" id="clockWindowEnd" value="09:30" style="padding:8px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;box-shadow:2px 2px 0 #e2e8f0;" />
+        </div>
+        <button class="btn btn-primary" onclick="saveClockSettings()">Save</button>
+      </div>
+      <div class="toast" id="settingsToast" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- Who's IN board -->
+    <div class="card">
+      <h2 style="display:flex;justify-content:space-between;align-items:center;">
+        Who's IN
+        <button class="btn btn-primary" onclick="loadClockStatus()" style="font-size:0.8rem;padding:6px 14px;">Refresh</button>
+      </h2>
+      <div id="whoInList"><p style="color:#a0aec0;font-size:0.9rem;">Loading…</p></div>
+    </div>
+
+    <!-- Records search -->
+    <div class="card">
+      <h2>Clock Records</h2>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;align-items:flex-end;">
+        <div class="form-group" style="margin:0;flex:1;min-width:150px;">
+          <label>Filter by name</label>
+          <input type="text" id="recName" placeholder="Search name…" />
+        </div>
+        <div class="form-group" style="margin:0;flex:1;min-width:150px;">
+          <label>Filter by date</label>
+          <input type="date" id="recDate" />
+        </div>
+        <button class="btn btn-primary" onclick="loadClockRecords()" style="flex-shrink:0;">Search</button>
+      </div>
+      <div id="clockRecordsWrap">
+        <table>
+          <thead><tr>
+            <th>Employee</th><th>Action</th><th>Timestamp</th><th>Note</th><th>Location</th>
+          </tr></thead>
+          <tbody id="clockRecordsBody">
+            <tr><td colspan="5" style="color:#a0aec0;text-align:center;padding:24px;">Run a search above.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- /section-clock -->
+
+  <!-- ══ DB RESET TAB ══ -->
+  <div id="section-reset" style="display:none">
+    <div class="card">
+      <h2>Database Reset</h2>
+      <div style="background:#fff5f5;border:1.5px solid #fed7d7;border-radius:10px;padding:20px;margin-bottom:24px;">
+        <p style="font-weight:700;color:#c53030;margin-bottom:8px;">⚠ Danger Zone</p>
+        <p style="font-size:0.875rem;color:#742a2a;line-height:1.6;">This will permanently delete all operational data: leave requests, WFH requests, claims, approval tokens, clock records, and leave balances. Counters will be reset to zero. User accounts are <strong>not</strong> affected.<br/><br/>Only use this after completing a full CSV export for archive.</p>
+      </div>
+      <div class="form-group">
+        <label>Type <strong>RESET</strong> to confirm</label>
+        <input type="text" id="resetConfirm" placeholder="RESET" style="max-width:200px;" />
+      </div>
+      <button class="btn btn-danger" onclick="doReset()">Reset Database</button>
+      <div class="toast" id="resetToast" style="margin-top:14px;"></div>
+    </div>
+  </div><!-- /section-reset -->
+
+</div><!-- /container -->
+
+<!-- Edit User Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h2>Edit User</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="editName" />
+      </div>
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" id="editUsername" />
+      </div>
+      <div class="form-group full">
+        <label>Email</label>
+        <input type="email" id="editEmail" />
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="editRole">
+          <option value="user">User</option>
+          <option value="hod">HOD</option>
+          <option value="approver_a">Approver A</option>
+          <option value="superadmin">Super Admin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Department</label>
+        <select id="editDept">
+          <option value="">— Select Department —</option>
+          <option value="Operation">Operation</option>
+          <option value="IT">IT</option>
+          <option value="Science">Science</option>
+          <option value="Production">Production</option>
+          <option value="Sales and Marketing">Sales and Marketing</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Others Approver (Sick / Emergency / WFH)</label>
+        <select id="editHod"><option value="">— Select Approver —</option></select>
+      </div>
+      <div class="form-group">
+        <label>AL / UPL Approver</label>
+        <select id="editAlApprover"><option value="">— Select Approver —</option></select>
+      </div>
+      <div class="form-group">
+        <label>Claims Approver</label>
+        <select id="editClaimApprover"><option value="">— Select Approver —</option></select>
+      </div>
+      <div class="form-group">
+        <label>Timezone</label>
+        <select id="editTimezone">
+          <option value="Asia/Kuala_Lumpur">Asia/Kuala_Lumpur (MYT, UTC+8)</option>
+          <option value="Europe/London">Europe/London (GMT/BST)</option>
+          <option value="America/New_York">America/New_York (ET)</option>
+          <option value="America/Los_Angeles">America/Los_Angeles (PT)</option>
+          <option value="Asia/Singapore">Asia/Singapore (SGT, UTC+8)</option>
+          <option value="Asia/Dubai">Asia/Dubai (GST, UTC+4)</option>
+          <option value="UTC">UTC</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>New Password <span style="color:#a0aec0;font-weight:400;">(leave blank to keep current)</span></label>
+        <input type="password" id="editPassword" placeholder="Only fill to change password" />
+      </div>
+    </div>
+    <div class="toast" id="editToast"></div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="saveUser()">Save Changes</button>
+      <button class="btn" style="background:#e2e8f0;color:#4a5568;" onclick="closeEditModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const _fetch = window.fetch.bind(window);
+  window.fetch = async function(url, opts) {
+    const res = await _fetch(url, opts);
+    if (res.status === 401 && !String(url).includes('/api/auth/')) {
+      localStorage.removeItem('teamly_token');
+      localStorage.removeItem('teamly_user');
+      sessionStorage.setItem('teamly_session_expired', '1');
+      window.location.href = '/';
+    }
+    return res;
+  };
+})();
+
+  const token = localStorage.getItem('teamly_token');
+  const me    = JSON.parse(localStorage.getItem('teamly_user') || '{}');
+
+  const ALLOWED_ROLES = ['superadmin', 'hod', 'approver_a'];
+  if (!token || !ALLOWED_ROLES.includes(me.role)) {
+    localStorage.removeItem('teamly_token');
+    localStorage.removeItem('teamly_user');
+    window.location.href = '/';
+  }
+
+  const isSuperAdmin = me.role === 'superadmin';
+
+  if (!isSuperAdmin) {
+    // Show "User Console" shortcut in topbar
+    document.getElementById('btnUserConsole').style.display = '';
+    // Hide reset tab — superadmin only
+    ['reset'].forEach(name => {
+      const tabEl     = document.getElementById('tab-' + name);
+      const sectionEl = document.getElementById('section-' + name);
+      if (tabEl)     tabEl.style.display     = 'none';
+      if (sectionEl) sectionEl.style.display = 'none';
+    });
+  }
+
+  const authHeaders = {
+    'Content-Type':  'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+
+  let allUsers = [];
+
+  async function loadUsers() {
+    try {
+      const res   = await fetch('/api/users', { headers: authHeaders });
+      allUsers    = await res.json();
+      renderUsers(allUsers);
+      populateApproverDropdowns(allUsers);
+    } catch {
+      document.getElementById('usersBody').innerHTML = '<tr><td colspan="6" style="color:#e53e3e;text-align:center;">Failed to load users.</td></tr>';
+    }
+  }
+
+  function renderUsers(users) {
+    const tbody = document.getElementById('usersBody');
+    if (!users.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:#a0aec0;text-align:center;padding:24px;">No users yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td>${u.name}</td>
+        <td style="color:#718096">${u.username}</td>
+        <td style="color:#718096;font-size:0.85rem">${u.email}</td>
+        <td><span class="badge badge-${u.role}">${u.role}</span></td>
+        <td style="color:#718096;font-size:0.85rem">${u.department || '—'}</td>
+        <td style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-edit btn-sm" onclick="openEditModal('${u.id}')">Edit</button>
+          ${u.role !== 'superadmin' ? `
+            <button class="btn btn-sm" style="background:#ed8936;color:#fff;" onclick="resetPassword('${u.id}', '${u.name}')">Reset Pass</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}', '${u.name}')">Remove</button>
+          ` : ''}
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function populateApproverDropdowns(users) {
+    const eligible = users.filter(u => ['hod','approver_a','superadmin'].includes(u.role));
+    const opts = '<option value="">— Select Approver —</option>' +
+      eligible.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+    ['newHod','newAlApprover','newClaimApprover'].forEach(id => {
+      document.getElementById(id).innerHTML = opts;
+    });
+  }
+
+  async function addUser() {
+    const body = {
+      name:              document.getElementById('newName').value.trim(),
+      username:          document.getElementById('newUsername').value.trim(),
+      email:             document.getElementById('newEmail').value.trim(),
+      role:              document.getElementById('newRole').value,
+      department:        document.getElementById('newDept').value.trim() || null,
+      hod_id:            document.getElementById('newHod').value || null,
+      al_approver_id:    document.getElementById('newAlApprover').value || null,
+      claim_approver_id: document.getElementById('newClaimApprover').value || null,
+      timezone:          document.getElementById('newTimezone').value || 'Asia/Kuala_Lumpur'
+    };
+
+    if (!body.name || !body.username || !body.email) {
+      showToast('addToast', 'Name, username, and email are required.', 'error');
+      return;
+    }
+
+    try {
+      const res  = await fetch('/api/users', { method: 'POST', headers: authHeaders, body: JSON.stringify(body) });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast('addToast', data.error || 'Failed to add user.', 'error');
+        return;
+      }
+      showToast('addToast', `${data.name} added. They will create their password on first sign-in.`, 'success');
+      ['newName','newUsername','newEmail','newDept'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('newRole').value = 'user';
+      ['newHod','newAlApprover','newClaimApprover'].forEach(id => document.getElementById(id).value = '');
+      loadUsers();
+    } catch {
+      showToast('addToast', 'Network error.', 'error');
+    }
+  }
+
+  async function resetPassword(id, name) {
+    if (!confirm(`Reset password for ${name}?\n\nThey will be prompted to create a new password on their next sign-in.`)) return;
+    try {
+      const res  = await fetch(`/api/users/${id}/reset-password`, { method: 'PUT', headers: authHeaders });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || 'Failed to reset password.'); return; }
+      showToast('addToast', `${name}'s password has been reset. They will create a new one on next sign-in.`, 'success');
+    } catch {
+      alert('Network error.');
+    }
+  }
+
+  async function deleteUser(id, name) {
+    if (!confirm(`Remove ${name}? This cannot be undone.`)) return;
+    try {
+      const res  = await fetch(`/api/users/${id}`, { method: 'DELETE', headers: authHeaders });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Failed to remove user.');
+        return;
+      }
+      loadUsers();
+    } catch {
+      alert('Network error.');
+    }
+  }
+
+  function showToast(id, msg, type) {
+    const el = document.getElementById(id);
+    el.textContent   = msg;
+    el.className     = `toast ${type}`;
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 4000);
+  }
+
+  let editingUserId = null;
+
+  function openEditModal(userId) {
+    const u = allUsers.find(x => x.id === userId);
+    if (!u) return;
+    editingUserId = userId;
+
+    document.getElementById('editName').value     = u.name;
+    document.getElementById('editUsername').value = u.username;
+    document.getElementById('editEmail').value    = u.email;
+    document.getElementById('editRole').value     = u.role;
+    document.getElementById('editDept').value     = u.department || '';
+    document.getElementById('editPassword').value = '';
+
+    // Populate approver dropdowns
+    const eligible = allUsers.filter(x => ['hod','approver_a','superadmin'].includes(x.role));
+    const opts = (selectedId) => '<option value="">— Select Approver —</option>' +
+      eligible.map(x => `<option value="${x.id}" ${x.id === selectedId ? 'selected' : ''}>${x.name}</option>`).join('');
+    document.getElementById('editHod').innerHTML          = opts(u.hod_id);
+    document.getElementById('editAlApprover').innerHTML   = opts(u.al_approver_id);
+    document.getElementById('editClaimApprover').innerHTML = opts(u.claim_approver_id);
+    document.getElementById('editTimezone').value         = u.timezone || 'Asia/Kuala_Lumpur';
+
+    document.getElementById('editModal').classList.add('open');
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModal').classList.remove('open');
+    editingUserId = null;
+  }
+
+  async function saveUser() {
+    if (!editingUserId) return;
+    const body = {
+      name:              document.getElementById('editName').value.trim(),
+      username:          document.getElementById('editUsername').value.trim(),
+      email:             document.getElementById('editEmail').value.trim(),
+      role:              document.getElementById('editRole').value,
+      department:        document.getElementById('editDept').value.trim() || null,
+      hod_id:            document.getElementById('editHod').value || null,
+      al_approver_id:    document.getElementById('editAlApprover').value || null,
+      claim_approver_id: document.getElementById('editClaimApprover').value || null,
+      timezone:          document.getElementById('editTimezone').value || 'Asia/Kuala_Lumpur'
+    };
+    const pw = document.getElementById('editPassword').value;
+    if (pw) body.password = pw;
+
+    try {
+      const res  = await fetch(`/api/users/${editingUserId}`, { method: 'PUT', headers: authHeaders, body: JSON.stringify(body) });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast('editToast', data.error || 'Failed to save.', 'error');
+        return;
+      }
+      closeEditModal();
+      loadUsers();
+    } catch {
+      showToast('editToast', 'Network error.', 'error');
+    }
+  }
+
+  // Close modal on overlay click
+  document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+  });
+
+  function logout() {
+    localStorage.removeItem('teamly_token');
+    localStorage.removeItem('teamly_user');
+    window.location.href = '/';
+  }
+
+  // ── Tab switching ────────────────────────────────────────────────────────────
+  const TABS = ['overview', 'users', 'balances', 'claims', 'tracking', 'holidays', 'blackout', 'export', 'clock', 'reset'];
+
+  function setTab(name) {
+    TABS.forEach(t => {
+      const sec = document.getElementById('section-' + t);
+      if (sec) sec.style.display = (t === name) ? '' : 'none';
+      const btn = document.getElementById('tab-' + t);
+      if (btn) {
+        btn.style.borderBottomColor = (t === name) ? '#4f46e5' : 'transparent';
+        btn.style.color = (t === name) ? '#4f46e5' : (t === 'reset' ? '#dc2626' : '#94a3b8');
+      }
+    });
+    if (name === 'overview')  loadOverview();
+    if (name === 'balances')  loadBalances();
+    if (name === 'holidays')  loadHolidays();
+    if (name === 'blackout')  loadBlackout();
+    if (name === 'clock')     loadClockStatus();
+    if (name === 'claims')    loadAdminClaims();
+    if (name === 'tracking')  loadTracking();
+  }
+
+  // ── AL Balances ──────────────────────────────────────────────────────────────
+  let allBalances  = [];
+  let editBalUserId = null;
+  let editBalYear   = null;
+
+  async function loadBalances() {
+    const year = document.getElementById('balYear').value;
+    try {
+      const res  = await fetch(`/api/admin/balances?year=${year}`, { headers: authHeaders });
+      allBalances = await res.json();
+      renderBalances(allBalances);
+    } catch {
+      document.getElementById('balancesBody').innerHTML = '<tr><td colspan="7" style="color:#e53e3e;text-align:center;">Failed to load.</td></tr>';
+    }
+  }
+
+  function renderBalances(rows) {
+    const tbody = document.getElementById('balancesBody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="8" style="color:#a0aec0;text-align:center;padding:24px;">No employees found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => {
+      const hasRecord = r.id != null;
+      const bA = hasRecord ? r.bucket_a : '—';
+      const bB = hasRecord ? r.bucket_b : '—';
+      const uA = hasRecord ? r.used_a   : '—';
+      const uB = hasRecord ? r.used_b   : '—';
+      const balance = hasRecord
+        ? Math.max(0, r.bucket_a - r.used_a) + Math.max(0, r.bucket_b - r.used_b)
+        : '—';
+      const balColor = hasRecord ? (balance === 0 ? '#e53e3e' : balance <= 3 ? '#d69e2e' : '#276749') : '#a0aec0';
+      const editArgs = `'${r.user_id}', '${r.employee_name || ''}', ${hasRecord ? r.bucket_a : 0}, ${hasRecord ? r.bucket_b : 14}, ${hasRecord ? r.used_a : 0}, ${hasRecord ? r.used_b : 0}`;
+      return `
+      <tr>
+        <td>${r.employee_name || '(unknown)'}</td>
+        <td style="color:#718096;font-size:0.85rem">${r.department || '—'}</td>
+        <td style="text-align:right">${bA}</td>
+        <td style="text-align:right">${bB}</td>
+        <td style="text-align:right;color:#718096">${uA}</td>
+        <td style="text-align:right;color:#718096">${uB}</td>
+        <td style="text-align:right;font-weight:700;color:${balColor}">${balance}</td>
+        <td style="display:flex;gap:6px;">
+          <button class="btn btn-edit btn-sm" onclick="openBalModal(${editArgs})">Edit</button>
+          ${hasRecord ? `<button class="btn btn-danger btn-sm" onclick="deleteBalance('${r.id}', '${r.employee_name || 'this record'}', '${document.getElementById('balYear').value}')">Delete</button>` : ''}
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function openBalModal(userId, name, bucketA, bucketB, usedA, usedB) {
+    editBalUserId = userId;
+    editBalYear   = document.getElementById('balYear').value;
+    document.getElementById('balModalName').textContent = name + ' — ' + editBalYear;
+    document.getElementById('balBucketA').value = bucketA;
+    document.getElementById('balBucketB').value = bucketB;
+    document.getElementById('balUsedA').value = usedA;
+    document.getElementById('balUsedB').value = usedB;
+    document.getElementById('balModal').classList.add('open');
+  }
+
+  function closeBalModal() {
+    document.getElementById('balModal').classList.remove('open');
+    editBalUserId = null;
+  }
+
+  async function saveBalance() {
+    const bucketA = parseFloat(document.getElementById('balBucketA').value);
+    const bucketB = parseFloat(document.getElementById('balBucketB').value);
+    const usedA   = parseFloat(document.getElementById('balUsedA').value);
+    const usedB   = parseFloat(document.getElementById('balUsedB').value);
+    if (isNaN(bucketA) || isNaN(bucketB) || bucketA < 0 || bucketB < 0 ||
+        isNaN(usedA)   || isNaN(usedB)   || usedA   < 0 || usedB   < 0) {
+      showToast('balModalToast', 'Enter valid non-negative numbers.', 'error'); return;
+    }
+    try {
+      const res  = await fetch('/api/admin/balances', {
+        method: 'PUT', headers: authHeaders,
+        body: JSON.stringify({ user_id: editBalUserId, year: parseInt(editBalYear), bucket_a: bucketA, bucket_b: bucketB, used_a: usedA, used_b: usedB })
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast('balModalToast', data.error || 'Failed.', 'error'); return; }
+      closeBalModal();
+      loadBalances();
+    } catch {
+      showToast('balModalToast', 'Network error.', 'error');
+    }
+  }
+
+  document.getElementById('balModal').addEventListener('click', function(e) {
+    if (e.target === this) closeBalModal();
+  });
+
+  // ── Public Holidays ──────────────────────────────────────────────────────────
+  async function loadHolidays() {
+    try {
+      const res  = await fetch('/api/holidays');
+      const list = await res.json();
+      renderHolidays(list);
+    } catch {
+      document.getElementById('holidayList').innerHTML = '<p style="color:#e53e3e;">Failed to load.</p>';
+    }
+  }
+
+  function renderHolidays(list) {
+    const el = document.getElementById('holidayList');
+    if (!list.length) {
+      el.innerHTML = '<p style="color:#a0aec0;font-size:0.9rem;">No public holidays set.</p>';
+      return;
+    }
+    const regionBadge = r => r === 'UK'
+      ? `<span style="background:#ebf4ff;color:#2b6cb0;font-size:0.72rem;font-weight:700;padding:1px 7px;border-radius:20px;margin-left:8px;">🇬🇧 UK</span>`
+      : `<span style="background:#f0fff4;color:#276749;font-size:0.72rem;font-weight:700;padding:1px 7px;border-radius:20px;margin-left:8px;">🇲🇾 MY</span>`;
+    el.innerHTML = list.map(h => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f4f8;">
+        <div style="display:flex;align-items:center;">
+          <span style="font-weight:700;color:#2d3748;">${h.date}</span>
+          <span style="color:#718096;font-size:0.85rem;margin-left:10px;">${h.name}</span>
+          ${regionBadge(h.region || 'MY')}
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteHoliday('${h.id}', '${h.date}', '${h.name.replace(/'/g,"\\'")}')">Remove</button>
+      </div>
+    `).join('');
+  }
+
+  async function addHoliday() {
+    const start_date = document.getElementById('phDate').value;
+    const end_date   = document.getElementById('phEndDate').value || null;
+    const name       = document.getElementById('phName').value.trim();
+    const region     = document.getElementById('phRegion').value;
+    if (!start_date) { showToast('phToast', 'Please select a date.', 'error'); return; }
+    if (!name)       { showToast('phToast', 'Please enter a holiday name.', 'error'); return; }
+    if (end_date && end_date < start_date) { showToast('phToast', 'End date cannot be before start date.', 'error'); return; }
+    try {
+      const res  = await fetch('/api/admin/holidays', {
+        method: 'POST', headers: authHeaders,
+        body: JSON.stringify({ start_date, end_date, name, region })
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast('phToast', data.error || 'Failed.', 'error'); return; }
+      const msg = data.inserted?.length > 1
+        ? `${data.inserted.length} dates added${data.skipped?.length ? ` (${data.skipped.length} already existed)` : ''}.`
+        : `${start_date} added.`;
+      showToast('phToast', msg, 'success');
+      document.getElementById('phDate').value    = '';
+      document.getElementById('phEndDate').value = '';
+      document.getElementById('phName').value    = '';
+      document.getElementById('phRegion').value  = 'MY';
+      loadHolidays();
+    } catch {
+      showToast('phToast', 'Network error.', 'error');
+    }
+  }
+
+  async function deleteHoliday(id, date, name) {
+    if (!confirm(`Remove "${name}" on ${date}?`)) return;
+    try {
+      const res = await fetch(`/api/admin/holidays/${id}`, { method: 'DELETE', headers: authHeaders });
+      if (!res.ok) { const d = await res.json(); alert(d.error || 'Failed.'); return; }
+      loadHolidays();
+    } catch { alert('Network error.'); }
+  }
+
+  async function clearAllHolidays() {
+    if (!confirm('Remove ALL public holidays? This cannot be undone.')) return;
+    try {
+      const res = await fetch('/api/admin/holidays', { method: 'DELETE', headers: authHeaders });
+      if (!res.ok) { const d = await res.json(); alert(d.error || 'Failed.'); return; }
+      loadHolidays();
+    } catch { alert('Network error.'); }
+  }
+
+  // ── Blackout Dates ───────────────────────────────────────────────────────────
+  async function loadBlackout() {
+    try {
+      const res  = await fetch('/api/blackout');
+      const list = await res.json();
+      renderBlackout(list);
+    } catch {
+      document.getElementById('blackoutList').innerHTML = '<p style="color:#e53e3e;">Failed to load.</p>';
+    }
+  }
+
+  function renderBlackout(list) {
+    const el = document.getElementById('blackoutList');
+    if (!list.length) {
+      el.innerHTML = '<p style="color:#a0aec0;font-size:0.9rem;">No blackout dates set.</p>';
+      return;
+    }
+    el.innerHTML = list.map(d => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f4f8;">
+        <div>
+          <span style="font-weight:700;color:#2d3748;">${d.date}</span>
+          ${d.reason ? `<span style="color:#718096;font-size:0.85rem;margin-left:10px;">${d.reason}</span>` : ''}
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteBlackout('${d.id}', '${d.date}')">Remove</button>
+      </div>
+    `).join('');
+  }
+
+  async function addBlackout() {
+    const start_date = document.getElementById('boStartDate').value;
+    const end_date   = document.getElementById('boEndDate').value || null;
+    const reason     = document.getElementById('boReason').value.trim();
+    if (!start_date) { showToast('boToast', 'Please select a start date.', 'error'); return; }
+    if (end_date && end_date < start_date) { showToast('boToast', 'End date cannot be before start date.', 'error'); return; }
+    try {
+      const res  = await fetch('/api/admin/blackout', {
+        method: 'POST', headers: authHeaders,
+        body: JSON.stringify({ start_date, end_date, reason: reason || null })
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast('boToast', data.error || 'Failed.', 'error'); return; }
+      const msg = data.inserted?.length > 1
+        ? `${data.inserted.length} dates added${data.skipped?.length ? ` (${data.skipped.length} already existed)` : ''}.`
+        : `${start_date} added.`;
+      showToast('boToast', msg, 'success');
+      document.getElementById('boStartDate').value = '';
+      document.getElementById('boEndDate').value   = '';
+      document.getElementById('boReason').value    = '';
+      loadBlackout();
+    } catch {
+      showToast('boToast', 'Network error.', 'error');
+    }
+  }
+
+  async function deleteBlackout(id, date) {
+    if (!confirm(`Remove blackout date ${date}?`)) return;
+    try {
+      const res = await fetch(`/api/admin/blackout/${id}`, { method: 'DELETE', headers: authHeaders });
+      if (!res.ok) { const d = await res.json(); alert(d.error || 'Failed.'); return; }
+      loadBlackout();
+    } catch { alert('Network error.'); }
+  }
+
+  // ── CSV Export — attach auth token to download links ─────────────────────────
+  // Since download links use plain <a href>, we intercept and fetch with auth header,
+  // then trigger a blob download so the JWT is included.
+  function setupExportLinks() {
+    ['users','leave_requests','wfh_requests','claims','leave_balances','clock_records'].forEach(t => {
+      const idMap = { users: 'exp-users', leave_requests: 'exp-leave', wfh_requests: 'exp-wfh', claims: 'exp-claims', leave_balances: 'exp-bal', clock_records: 'exp-clock' };
+      const el = document.getElementById(idMap[t]);
+      if (!el) return;
+      el.removeAttribute('href');
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', async e => {
+        e.preventDefault();
+        try {
+          const res  = await fetch(`/api/admin/export/${t}`, { headers: authHeaders });
+          if (!res.ok) { alert('Export failed.'); return; }
+          const blob = await res.blob();
+          const url  = URL.createObjectURL(blob);
+          const a    = document.createElement('a');
+          a.href = url; a.download = t + '.csv';
+          a.click();
+          URL.revokeObjectURL(url);
+        } catch { alert('Network error.'); }
+      });
+    });
+  }
+
+  // ── DB Reset ─────────────────────────────────────────────────────────────────
+  async function doReset() {
+    const val = document.getElementById('resetConfirm').value.trim();
+    if (val !== 'RESET') {
+      showToast('resetToast', 'Type RESET exactly to confirm.', 'error'); return;
+    }
+    if (!confirm('This will permanently delete all operational data. Are you sure?')) return;
+    try {
+      const res  = await fetch('/api/admin/reset', {
+        method: 'POST', headers: authHeaders,
+        body: JSON.stringify({ confirm: 'RESET' })
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast('resetToast', data.error || 'Failed.', 'error'); return; }
+      showToast('resetToast', data.message || 'Reset complete.', 'success');
+      document.getElementById('resetConfirm').value = '';
+    } catch {
+      showToast('resetToast', 'Network error.', 'error');
+    }
+  }
+
+  // ── Clock ─────────────────────────────────────────────────────────────────────
+  let clockSettings = { clock_window_start: '08:00', clock_window_end: '09:30' };
+
+  function fmtDateTime(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleString('en-MY', {
+      timeZone: 'Asia/Kuala_Lumpur',
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  function isLate(timestamp, timezone) {
+    const tz  = timezone || 'Asia/Kuala_Lumpur';
+    const dt  = new Date(timestamp);
+    const local = dt.toLocaleString('en-CA', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false });
+    const [h, m]  = local.split(':').map(Number);
+    const clockMin = h * 60 + m;
+    const [eh, em] = (clockSettings.clock_window_end || '09:30').split(':').map(Number);
+    return clockMin > eh * 60 + em;
+  }
+
+  async function loadClockSettings() {
+    try {
+      const res = await fetch('/api/admin/settings', { headers: authHeaders });
+      if (!res.ok) return;
+      clockSettings = await res.json();
+      if (clockSettings.clock_window_start) document.getElementById('clockWindowStart').value = clockSettings.clock_window_start;
+      if (clockSettings.clock_window_end)   document.getElementById('clockWindowEnd').value   = clockSettings.clock_window_end;
+    } catch {}
+  }
+
+  async function saveClockSettings() {
+    const windowStart = document.getElementById('clockWindowStart').value;
+    const windowEnd   = document.getElementById('clockWindowEnd').value;
+    if (!windowStart || !windowEnd) { showToast('settingsToast', 'Both times are required.', 'error'); return; }
+    if (windowEnd <= windowStart)   { showToast('settingsToast', 'Window end must be after window start.', 'error'); return; }
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'PUT', headers: authHeaders,
+        body: JSON.stringify({ clock_window_start: windowStart, clock_window_end: windowEnd })
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast('settingsToast', data.error || 'Failed.', 'error'); return; }
+      clockSettings.clock_window_start = windowStart;
+      clockSettings.clock_window_end   = windowEnd;
+      showToast('settingsToast', `Saved — clock-in window: ${windowStart} – ${windowEnd}.`, 'success');
+    } catch {
+      showToast('settingsToast', 'Network error.', 'error');
+    }
+  }
+
+  async function loadClockStatus() {
+    await loadClockSettings();
+    try {
+      const res  = await fetch('/api/clock/status/all', { headers: authHeaders });
+      const list = await res.json();
+      const el   = document.getElementById('whoInList');
+      if (!list.length) { el.innerHTML = '<p style="color:#a0aec0;font-size:0.9rem;">No employees found.</p>'; return; }
+
+      const inList  = list.filter(u => u.status === 'IN');
+      const outList = list.filter(u => u.status === 'OUT');
+
+      el.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:20px;">
+          ${inList.map(u => `
+            <div style="padding:14px;background:#f0fff4;border:1.5px solid #9ae6b4;border-radius:10px;">
+              <div style="font-weight:700;color:#276749;">${u.name}</div>
+              <div style="font-size:0.78rem;color:#48bb78;margin-top:2px;">IN since ${u.last_timestamp_display || fmtDateTime(u.last_timestamp)}</div>
+              ${u.department ? `<div style="font-size:0.75rem;color:#718096;">${u.department}</div>` : ''}
+            </div>
+          `).join('')}
+          ${outList.map(u => `
+            <div style="padding:14px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:10px;">
+              <div style="font-weight:600;color:#718096;">${u.name}</div>
+              <div style="font-size:0.78rem;color:#a0aec0;margin-top:2px;">${u.last_timestamp ? 'Last: ' + (u.last_timestamp_display || fmtDateTime(u.last_timestamp)) : 'No records'}</div>
+              ${u.department ? `<div style="font-size:0.75rem;color:#a0aec0;">${u.department}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+        <p style="font-size:0.8rem;color:#a0aec0;">${inList.length} IN · ${outList.length} OUT</p>`;
+    } catch {
+      document.getElementById('whoInList').innerHTML = '<p style="color:#e53e3e;">Failed to load.</p>';
+    }
+  }
+
+  async function loadClockRecords() {
+    const name = document.getElementById('recName').value.trim();
+    const date = document.getElementById('recDate').value;
+    let url    = '/api/records?';
+    if (name) url += `name=${encodeURIComponent(name)}&`;
+    if (date) url += `date=${date}`;
+    try {
+      const res     = await fetch(url, { headers: authHeaders });
+      const records = await res.json();
+      const tbody   = document.getElementById('clockRecordsBody');
+      if (!records.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color:#a0aec0;text-align:center;padding:24px;">No records found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = records.map(r => {
+        const late = r.action === 'IN' && isLate(r.timestamp, r.timezone);
+        return `
+        <tr>
+          <td>${r.employee_name}</td>
+          <td>
+            <span style="font-weight:700;color:${r.action === 'IN' ? '#276749' : '#e53e3e'}">
+              ${r.action === 'IN' ? '→ IN' : '← OUT'}
+            </span>
+            ${late ? '<span style="margin-left:6px;padding:2px 7px;background:#fed7d7;color:#c53030;border-radius:4px;font-size:0.72rem;font-weight:700;">LATE</span>' : ''}
+          </td>
+          <td style="font-size:0.85rem">${r.timestamp_display || fmtDateTime(r.timestamp)}</td>
+          <td style="color:#718096;font-size:0.85rem">${r.note || '—'}</td>
+          <td style="color:#a0aec0;font-size:0.78rem">
+            ${r.latitude ? `${Number(r.latitude).toFixed(4)}, ${Number(r.longitude).toFixed(4)}` : '—'}
+          </td>
+        </tr>`;
+      }).join('');
+    } catch {
+      document.getElementById('clockRecordsBody').innerHTML = '<tr><td colspan="5" style="color:#e53e3e;text-align:center;">Failed to load.</td></tr>';
+    }
+  }
+
+  // ── Delete AL Balance ─────────────────────────────────────────────────────────
+  async function deleteBalance(id, name, year) {
+    if (!confirm(`Delete AL balance record for ${name} (${year})? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`/api/admin/balances/${id}`, { method: 'DELETE', headers: authHeaders });
+      if (!res.ok) { const d = await res.json(); showToast('balToast', d.error || 'Failed.', 'error'); return; }
+      showToast('balToast', 'Balance record deleted.', 'success');
+      loadBalances();
+    } catch { showToast('balToast', 'Network error.', 'error'); }
+  }
+
+  // ── Admin Claims ──────────────────────────────────────────────────────────────
+  let allAdminClaims = [];
+  let rejectingClaimId = null;
+
+  function fmtDateShort(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-MY', { timeZone: 'Asia/Kuala_Lumpur', day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  const claimStatusBadge = {
+    pending:         'background:#fef3c7;color:#92400e',
+    payment_pending: 'background:#dbeafe;color:#1e40af',
+    paid:            'background:#c6f6d5;color:#22543d',
+    rejected:        'background:#fed7d7;color:#742a2a',
+    cancelled:       'background:#e2e8f0;color:#4a5568',
+  };
+  const claimStatusLabel = {
+    pending: 'Pending', payment_pending: 'Payment Pending', paid: 'Paid',
+    rejected: 'Rejected', cancelled: 'Cancelled'
+  };
+
+  async function loadAdminClaims() {
+    document.getElementById('claimsAdminBody').innerHTML = '<tr><td colspan="9" style="color:#a0aec0;text-align:center;padding:24px;">Loading…</td></tr>';
+    try {
+      const res = await fetch('/api/claims', { headers: authHeaders });
+      allAdminClaims = await res.json();
+      renderAdminClaims();
+    } catch {
+      document.getElementById('claimsAdminBody').innerHTML = '<tr><td colspan="9" style="color:#e53e3e;text-align:center;">Failed to load.</td></tr>';
+    }
+  }
+
+  function renderAdminClaims() {
+    const filter = document.getElementById('claimFilterStatus').value;
+    const rows   = filter ? allAdminClaims.filter(c => c.status === filter) : allAdminClaims;
+    const tbody  = document.getElementById('claimsAdminBody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="9" style="color:#a0aec0;text-align:center;padding:24px;">No claims found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(c => {
+      const st    = c.status;
+      const style = claimStatusBadge[st] || '';
+      const label = claimStatusLabel[st] || st;
+      const actions = [];
+      if (st === 'pending')         actions.push(`<button class="btn btn-primary btn-sm" onclick="markPaymentPending('${c.id}')">Payment Pending</button>`);
+      if (st === 'payment_pending') actions.push(`<button class="btn btn-primary btn-sm" style="background:#38a169;" onclick="markPaid('${c.id}')">Mark Paid</button>`);
+      if (['pending','payment_pending'].includes(st)) actions.push(`<button class="btn btn-danger btn-sm" onclick="openClaimRejectModal('${c.id}')">Reject</button>`);
+      actions.push(`<button class="btn btn-sm" style="background:#e2e8f0;color:#4a5568;" onclick="viewReceipt('${c.id}')">Receipt</button>`);
+      actions.push(`<button class="btn btn-sm" style="background:#744210;color:#fff;" onclick="openOverrideModal('claim','${c.id}',loadAdminClaims)">Override</button>`);
+      return `<tr>
+        <td style="font-size:0.8rem;color:#718096;">${c.ref_no || '—'}</td>
+        <td style="font-weight:600;">${c.employee_name || '—'}</td>
+        <td>${c.item}</td>
+        <td style="text-align:right;font-weight:700;color:#38a169;">RM ${Number(c.amount).toFixed(2)}</td>
+        <td style="font-size:0.85rem;color:#718096;">${c.category_name || '—'}</td>
+        <td style="font-size:0.85rem;color:#718096;">${c.department || '—'}</td>
+        <td><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;${style}">${label}</span></td>
+        <td style="font-size:0.8rem;color:#718096;">${fmtDateShort(c.created_at)}</td>
+        <td style="display:flex;gap:4px;flex-wrap:wrap;">${actions.join('')}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  async function markPaymentPending(id) {
+    try {
+      const res = await fetch(`/api/claims/${id}/approve`, { method: 'PUT', headers: authHeaders });
+      const data = await res.json();
+      if (!res.ok) { showToast('claimAdminToast', data.error || 'Failed.', 'error'); return; }
+      showToast('claimAdminToast', 'Marked as Payment Pending.', 'success');
+      await loadAdminClaims();
+    } catch { showToast('claimAdminToast', 'Network error.', 'error'); }
+  }
+
+  async function markPaid(id) {
+    try {
+      const res = await fetch(`/api/claims/${id}/mark-paid`, { method: 'PUT', headers: authHeaders });
+      const data = await res.json();
+      if (!res.ok) { showToast('claimAdminToast', data.error || 'Failed.', 'error'); return; }
+      showToast('claimAdminToast', 'Marked as Paid.', 'success');
+      await loadAdminClaims();
+    } catch { showToast('claimAdminToast', 'Network error.', 'error'); }
+  }
+
+  function openClaimRejectModal(id) {
+    rejectingClaimId = id;
+    document.getElementById('claimRejectReason').value = '';
+    document.getElementById('claimRejectModal').classList.add('open');
+  }
+
+  function closeClaimRejectModal() {
+    document.getElementById('claimRejectModal').classList.remove('open');
+    rejectingClaimId = null;
+    window._rejectFromOverview = false;
+  }
+
+  async function confirmRejectClaim() {
+    const reason = document.getElementById('claimRejectReason').value.trim();
+    if (!reason) { showToast('claimRejectToast', 'Rejection reason is required.', 'error'); return; }
+    try {
+      const res  = await fetch(`/api/claims/${rejectingClaimId}/reject`, {
+        method: 'PUT', headers: authHeaders,
+        body: JSON.stringify({ rejection_reason: reason })
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast('claimRejectToast', data.error || 'Failed.', 'error'); return; }
+      const fromOv = window._rejectFromOverview;
+      window._rejectFromOverview = false;
+      closeClaimRejectModal();
+      if (fromOv) {
+        showToast('ovClaimToast', 'Claim rejected.', 'success');
+        loadOverview();
+      } else {
+        showToast('claimAdminToast', 'Claim rejected.', 'success');
+        await loadAdminClaims();
+      }
+    } catch { showToast('claimRejectToast', 'Network error.', 'error'); }
+  }
+
+  async function viewReceipt(id) {
+    try {
+      const res   = await fetch(`/api/claims/${id}`, { headers: authHeaders });
+      const claim = await res.json();
+      if (!claim.receipt) { alert('No receipt attached.'); return; }
+      const win = window.open();
+      if (claim.receipt.startsWith('data:image')) {
+        win.document.write(`<img src="${claim.receipt}" style="max-width:100%;display:block;margin:auto;" />`);
+      } else if (claim.receipt.startsWith('data:application/pdf')) {
+        win.document.write(`<iframe src="${claim.receipt}" style="width:100%;height:100vh;border:none;"></iframe>`);
+      } else {
+        const a = win.document.createElement('a');
+        a.href = claim.receipt;
+        a.download = `receipt_${claim.ref_no || id}`;
+        a.click();
+        win.close();
+      }
+    } catch { alert('Failed to load receipt.'); }
+  }
+
+  document.getElementById('claimRejectModal').addEventListener('click', function(e) {
+    if (e.target === this) closeClaimRejectModal();
+  });
+
+  // ── Overview ──────────────────────────────────────────────────────────────────
+  const leaveTypeLabel = { AL:'AL', sick:'Sick', emergency:'Emergency', comp_off:'Comp Off', UPL:'UPL' };
+
+  async function loadOverview() {
+    try {
+      const [leaveRes, wfhRes, claimRes] = await Promise.all([
+        fetch('/api/leave',  { headers: authHeaders }),
+        fetch('/api/wfh',    { headers: authHeaders }),
+        fetch('/api/claims', { headers: authHeaders }),
+      ]);
+      const [allLeave, allWfh, allClaims] = await Promise.all([leaveRes.json(), wfhRes.json(), claimRes.json()]);
+
+      const pendingLeave  = allLeave.filter(r => r.status === 'pending');
+      const pendingWfh    = allWfh.filter(r => r.status === 'pending');
+      const activeClaims  = allClaims.filter(c => c.status === 'pending' || c.status === 'payment_pending');
+
+      // Update count cards
+      document.getElementById('ovCountLeave').textContent  = pendingLeave.length;
+      document.getElementById('ovCountWfh').textContent    = pendingWfh.length;
+      document.getElementById('ovCountClaims').textContent = activeClaims.length;
+
+      // Update tab badge
+      const total = pendingLeave.length + pendingWfh.length + activeClaims.length;
+      const badge = document.getElementById('overviewBadge');
+      if (total > 0) { badge.textContent = total; badge.style.display = 'inline'; }
+      else           { badge.style.display = 'none'; }
+
+      // Render leave table
+      const lbody = document.getElementById('ovLeaveBody');
+      if (!pendingLeave.length) {
+        lbody.innerHTML = '<tr><td colspan="7" style="color:#a0aec0;text-align:center;padding:24px;">No pending leave requests.</td></tr>';
+      } else {
+        lbody.innerHTML = pendingLeave.map(r => {
+          const dateRange = r.start_date === r.end_date ? r.start_date : `${r.start_date} – ${r.end_date}`;
+          const half      = r.half_day ? ` (${r.half_day})` : '';
+          return `<tr>
+            <td style="font-size:0.8rem;color:#718096;">${r.ref_no || '—'}</td>
+            <td style="font-weight:600;">${r.employee_name || '—'}</td>
+            <td><span style="padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:600;background:#fef3c7;color:#92400e;">${leaveTypeLabel[r.type] || r.type}</span></td>
+            <td style="font-size:0.85rem;">${dateRange}${half}</td>
+            <td style="text-align:center;font-weight:600;">${r.days_count}</td>
+            <td style="font-size:0.82rem;color:#718096;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.reason || '—'}</td>
+            <td style="font-size:0.8rem;color:#a0aec0;">${fmtDateShort(r.created_at)}</td>
+            <td><button class="btn btn-sm" style="background:#744210;color:#fff;white-space:nowrap;" onclick="openOverrideModal('leave','${r.id}',loadOverview)">Override</button></td>
+          </tr>`;
+        }).join('');
+      }
+
+      // Render WFH table
+      const wbody = document.getElementById('ovWfhBody');
+      if (!pendingWfh.length) {
+        wbody.innerHTML = '<tr><td colspan="5" style="color:#a0aec0;text-align:center;padding:24px;">No pending WFH requests.</td></tr>';
+      } else {
+        wbody.innerHTML = pendingWfh.map(r => `<tr>
+          <td style="font-size:0.8rem;color:#718096;">${r.ref_no || '—'}</td>
+          <td style="font-weight:600;">${r.employee_name || '—'}</td>
+          <td style="font-size:0.85rem;">${r.date}</td>
+          <td style="font-size:0.82rem;color:#718096;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.reason || '—'}</td>
+          <td style="font-size:0.8rem;color:#a0aec0;">${fmtDateShort(r.created_at)}</td>
+          <td><button class="btn btn-sm" style="background:#744210;color:#fff;white-space:nowrap;" onclick="openOverrideModal('wfh','${r.id}',loadOverview)">Override</button></td>
+        </tr>`).join('');
+      }
+
+      // Render claims table
+      const cbody = document.getElementById('ovClaimsBody');
+      if (!activeClaims.length) {
+        cbody.innerHTML = '<tr><td colspan="7" style="color:#a0aec0;text-align:center;padding:24px;">No claims awaiting action.</td></tr>';
+      } else {
+        cbody.innerHTML = activeClaims.map(c => {
+          const st    = c.status;
+          const style = claimStatusBadge[st] || '';
+          const label = claimStatusLabel[st] || st;
+          const actions = [];
+          if (st === 'pending')         actions.push(`<button class="btn btn-primary btn-sm" onclick="ovMarkPaymentPending('${c.id}')">Payment Pending</button>`);
+          if (st === 'payment_pending') actions.push(`<button class="btn btn-primary btn-sm" style="background:#38a169;" onclick="ovMarkPaid('${c.id}')">Mark Paid</button>`);
+          if (['pending','payment_pending'].includes(st)) actions.push(`<button class="btn btn-danger btn-sm" onclick="openClaimRejectModalOv('${c.id}')">Reject</button>`);
+          return `<tr>
+            <td style="font-size:0.8rem;color:#718096;">${c.ref_no || '—'}</td>
+            <td style="font-weight:600;">${c.employee_name || '—'}</td>
+            <td>${c.item}</td>
+            <td style="text-align:right;font-weight:700;color:#38a169;">RM ${Number(c.amount).toFixed(2)}</td>
+            <td><span style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;${style}">${label}</span></td>
+            <td style="font-size:0.8rem;color:#a0aec0;">${fmtDateShort(c.created_at)}</td>
+            <td style="display:flex;gap:4px;flex-wrap:wrap;">${actions.join('')}</td>
+          </tr>`;
+        }).join('');
+      }
+    } catch {
+      ['ovLeaveBody','ovWfhBody','ovClaimsBody'].forEach(id => {
+        document.getElementById(id).innerHTML = `<tr><td colspan="9" style="color:#e53e3e;text-align:center;">Failed to load.</td></tr>`;
+      });
+    }
+  }
+
+  async function ovMarkPaymentPending(id) {
+    try {
+      const res = await fetch(`/api/claims/${id}/approve`, { method: 'PUT', headers: authHeaders });
+      const data = await res.json();
+      if (!res.ok) { showToast('ovClaimToast', data.error || 'Failed.', 'error'); return; }
+      showToast('ovClaimToast', 'Marked as Payment Pending.', 'success');
+      loadOverview();
+    } catch { showToast('ovClaimToast', 'Network error.', 'error'); }
+  }
+
+  async function ovMarkPaid(id) {
+    try {
+      const res = await fetch(`/api/claims/${id}/mark-paid`, { method: 'PUT', headers: authHeaders });
+      const data = await res.json();
+      if (!res.ok) { showToast('ovClaimToast', data.error || 'Failed.', 'error'); return; }
+      showToast('ovClaimToast', 'Marked as Paid.', 'success');
+      loadOverview();
+    } catch { showToast('ovClaimToast', 'Network error.', 'error'); }
+  }
+
+  function openClaimRejectModalOv(id) {
+    rejectingClaimId = id;
+    document.getElementById('claimRejectReason').value = '';
+    // Override confirm callback to reload overview instead of claims tab
+    window._rejectFromOverview = true;
+    document.getElementById('claimRejectModal').classList.add('open');
+  }
+
+  // ── Tracking ─────────────────────────────────────────────────────────────────
+  let allTrackingRows = [];
+  let allHolidays     = [];
+  let trackView    = 'table';
+  let calYear, calMonth, calWeekStart;
+
+  const trackTypeBadge = {
+    AL:        'background:#c6f6d5;color:#22543d;',
+    sick:      'background:#fef3c7;color:#92400e;',
+    emergency: 'background:#fed7d7;color:#742a2a;',
+    comp_off:  'background:#e9d8fd;color:#553c9a;',
+    UPL:       'background:#e2e8f0;color:#4a5568;',
+    wfh:       'background:#bee3f8;color:#2a4365;',
+    claim:     'background:#fefcbf;color:#744210;'
+  };
+  const trackTypeLabel = {
+    AL:'AL', sick:'Sick', emergency:'Emergency', comp_off:'Comp Off', UPL:'UPL', wfh:'WFH', claim:'Claim'
+  };
+  const trackStatusBadge = {
+    pending:         'background:#fef3c7;color:#92400e;',
+    approved:        'background:#c6f6d5;color:#22543d;',
+    rejected:        'background:#fed7d7;color:#742a2a;',
+    cancelled:       'background:#e2e8f0;color:#718096;',
+    payment_pending: 'background:#bee3f8;color:#2a4365;',
+    paid:            'background:#c6f6d5;color:#22543d;'
+  };
+  const trackStatusLabel = {
+    pending:'Pending', approved:'Approved', rejected:'Rejected', cancelled:'Cancelled',
+    payment_pending:'Payment Pending', paid:'Paid'
+  };
+
+  async function loadTracking() {
+    document.getElementById('trackingBody').innerHTML =
+      '<tr><td colspan="10" style="color:#a0aec0;text-align:center;padding:24px;">Loading…</td></tr>';
+    try {
+      const [trackRes, holRes] = await Promise.all([
+        fetch('/api/admin/tracking', { headers: authHeaders }),
+        fetch('/api/holidays')
+      ]);
+      const data = await trackRes.json();
+      if (!trackRes.ok) throw new Error(data.error);
+      allTrackingRows = data;
+      allHolidays     = holRes.ok ? await holRes.json() : [];
+      renderTracking();
+    } catch (e) {
+      document.getElementById('trackingBody').innerHTML =
+        `<tr><td colspan="10" style="color:#e53e3e;text-align:center;padding:24px;">Failed to load: ${e.message}</td></tr>`;
+    }
+  }
+
+  function renderTracking() {
+    if (trackView === 'month') { renderMonth(); return; }
+    if (trackView === 'week')  { renderWeek();  return; }
+    const empQ   = document.getElementById('trackFilterEmployee').value.toLowerCase();
+    const typeQ  = document.getElementById('trackFilterType').value;
+    const statQ  = document.getElementById('trackFilterStatus').value;
+    const deptQ  = document.getElementById('trackFilterDept').value;
+    const fromQ  = document.getElementById('trackFilterFrom').value;
+    const toQ    = document.getElementById('trackFilterTo').value;
+
+    let rows = allTrackingRows;
+    if (empQ)  rows = rows.filter(r => r.employee_name?.toLowerCase().includes(empQ));
+    if (typeQ) rows = rows.filter(r => r.type === typeQ);
+    if (statQ) rows = rows.filter(r => r.status === statQ);
+    if (deptQ) rows = rows.filter(r => r.department === deptQ);
+    if (fromQ) rows = rows.filter(r => r.date_from >= fromQ);
+    if (toQ)   rows = rows.filter(r => r.date_from <= toQ);
+
+    document.getElementById('trackCount').textContent = `${rows.length} record${rows.length !== 1 ? 's' : ''}`;
+
+    const tbody = document.getElementById('trackingBody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="10" style="color:#a0aec0;text-align:center;padding:24px;">No records match the filters.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = rows.map(r => {
+      const dateRange = (r.date_from && r.date_to && r.date_from !== r.date_to)
+        ? `${r.date_from} – ${r.date_to}`
+        : (r.date_from || '—');
+      const half     = r.half_day ? ` (${r.half_day})` : '';
+      const days     = r.days_count != null ? r.days_count : '—';
+      const tBadge   = trackTypeBadge[r.type] || '';
+      const sBadge   = trackStatusBadge[r.status] || '';
+      return `<tr style="cursor:pointer;" onclick="openTrackDetail('${r.id}', '${r.request_category}')">
+        <td style="font-size:0.8rem;color:#718096;">${r.ref_no || '—'}</td>
+        <td style="font-weight:600;">${r.employee_name || '—'}</td>
+        <td style="font-size:0.82rem;color:#718096;">${r.department || '—'}</td>
+        <td><span style="padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:600;${tBadge}">${trackTypeLabel[r.type] || r.type}</span></td>
+        <td style="font-size:0.85rem;">${dateRange}${half}</td>
+        <td style="text-align:center;font-weight:600;">${days}</td>
+        <td><span style="padding:2px 8px;border-radius:12px;font-size:0.75rem;font-weight:600;${sBadge}">${trackStatusLabel[r.status] || r.status}</span></td>
+        <td style="font-size:0.82rem;color:#718096;">${r.approver_name || '—'}</td>
+        <td style="font-size:0.8rem;color:#a0aec0;">${fmtDateShort(r.created_at)}</td>
+        <td><button class="btn btn-sm" style="background:#744210;color:#fff;" onclick="event.stopPropagation();openOverrideModal('${r.request_category === 'leave' ? 'leave' : r.request_category}','${r.id}',loadTracking)">Override</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function clearTrackFilters() {
+    document.getElementById('trackFilterEmployee').value = '';
+    document.getElementById('trackFilterType').value     = '';
+    document.getElementById('trackFilterStatus').value   = '';
+    document.getElementById('trackFilterDept').value     = '';
+    document.getElementById('trackFilterFrom').value     = '';
+    document.getElementById('trackFilterTo').value       = '';
+    if (trackView === 'table') renderTracking();
+    else if (trackView === 'month') renderMonth();
+    else if (trackView === 'week')  renderWeek();
+  }
+
+  // Returns filtered rows for calendar (excludes claims, respects employee/type/status filters only)
+  function getFilteredCalRows() {
+    const empQ  = document.getElementById('trackFilterEmployee').value.toLowerCase();
+    const typeQ = document.getElementById('trackFilterType').value;
+    const statQ = document.getElementById('trackFilterStatus').value;
+    const deptQ = document.getElementById('trackFilterDept').value;
+    let rows = allTrackingRows.filter(r => r.request_category !== 'claim' && r.status !== 'cancelled');
+    if (empQ)  rows = rows.filter(r => r.employee_name?.toLowerCase().includes(empQ));
+    if (typeQ && typeQ !== 'claim') rows = rows.filter(r => r.type === typeQ);
+    if (statQ) rows = rows.filter(r => r.status === statQ);
+    if (deptQ) rows = rows.filter(r => r.department === deptQ);
+    return rows;
+  }
+
+  // ── View toggle ──────────────────────────────────────────────────────────────
+  function setTrackView(v) {
+    trackView = v;
+    ['table','month','week'].forEach(vv => {
+      const btn = document.getElementById('trackViewBtn-' + vv);
+      btn.style.background = vv === v ? '#4f46e5' : '#e2e8f0';
+      btn.style.color      = vv === v ? '#fff'    : '#4a5568';
+    });
+    document.getElementById('trackTableView').style.display = v === 'table' ? '' : 'none';
+    document.getElementById('trackMonthView').style.display = v === 'month' ? '' : 'none';
+    document.getElementById('trackWeekView').style.display  = v === 'week'  ? '' : 'none';
+    if (v === 'month') renderMonth();
+    if (v === 'week')  renderWeek();
+  }
+
+  // ── Month calendar ───────────────────────────────────────────────────────────
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  // Use local date parts to avoid UTC-shift bug (toISOString gives previous day in UTC+8 at midnight)
+  function localDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function renderMonth() {
+    const now = new Date();
+    if (calYear === undefined) { calYear = now.getFullYear(); calMonth = now.getMonth(); }
+
+    const rows    = getFilteredCalRows();
+    const todayStr = localDateStr(now);
+
+    // Build day map: YYYY-MM-DD -> [row, ...]
+    const dayMap = {};
+    rows.forEach(row => {
+      const from = new Date(row.date_from + 'T00:00:00');
+      const to   = new Date(row.date_to   + 'T00:00:00');
+      for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+        const key = localDateStr(d);
+        if (!dayMap[key]) dayMap[key] = [];
+        dayMap[key].push(row);
+      }
+    });
+
+    const firstDay = new Date(calYear, calMonth, 1);
+    const lastDay  = new Date(calYear, calMonth + 1, 0);
+    let startDow   = firstDay.getDay(); // 0=Sun
+    startDow       = startDow === 0 ? 6 : startDow - 1; // Mon-based
+
+    const cells = [];
+    for (let i = 0; i < startDow; i++) cells.push(null);
+    for (let d = 1; d <= lastDay.getDate(); d++) cells.push(d);
+    while (cells.length % 7 !== 0) cells.push(null);
+
+    let html = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <button class="btn" style="background:#e2e8f0;color:#4a5568;padding:6px 16px;" onclick="calPrevMonth()">‹</button>
+        <span style="font-size:1.05rem;font-weight:700;font-family:'Open Sans',sans-serif;">${MONTH_NAMES[calMonth]} ${calYear}</span>
+        <button class="btn" style="background:#e2e8f0;color:#4a5568;padding:6px 16px;" onclick="calNextMonth()">›</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;">
+    `;
+
+    ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d => {
+      html += `<div style="text-align:center;font-size:0.72rem;font-weight:700;color:#718096;padding:6px 0;font-family:'Open Sans',sans-serif;">${d}</div>`;
+    });
+
+    // Build holiday map for this month
+    const holidayMap = {};
+    allHolidays.forEach(h => { holidayMap[h.date] = h.name; });
+
+    cells.forEach(day => {
+      if (!day) { html += `<div style="min-height:88px;background:#f7fafc;border-radius:6px;"></div>`; return; }
+
+      const dateStr   = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const isToday   = dateStr === todayStr;
+      const dow       = new Date(dateStr + 'T00:00:00').getDay();
+      const isWeekend = dow === 0 || dow === 6;
+      const isHoliday = !!holidayMap[dateStr];
+      const dayRows   = dayMap[dateStr] || [];
+
+      const bg     = isHoliday ? '#fef9c3' : (isToday ? '#e6fffa' : (isWeekend ? '#f7fafc' : '#fff'));
+      const border = isToday ? '2px solid #4f46e5' : (isHoliday ? '1.5px solid #fde68a' : '1.5px solid #e2e8f0');
+
+      const holidayLabel = isHoliday
+        ? `<div style="font-size:0.65rem;font-weight:700;color:#92400e;background:#fde68a;border-radius:3px;padding:1px 4px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${holidayMap[dateStr]}">${holidayMap[dateStr]}</div>`
+        : '';
+
+      const pills = dayRows.slice(0, 3).map(r => {
+        const c     = trackTypeBadge[r.type] || 'background:#e2e8f0;color:#4a5568;';
+        const first = (r.employee_name || '?').split(' ')[0];
+        const label = r.department ? `${first}-${r.department}` : first;
+        const tip   = `${r.employee_name} · ${trackTypeLabel[r.type] || r.type} · ${trackStatusLabel[r.status] || r.status}`;
+        return `<div title="${tip}" onclick="openTrackDetail('${r.id}','${r.request_category}')"
+          style="font-size:0.68rem;font-weight:600;padding:2px 5px;border-radius:4px;margin-bottom:2px;cursor:pointer;line-height:1.3;${c}">
+          <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${label}</div>
+          <div style="font-weight:400;opacity:0.85;">${trackTypeLabel[r.type] || r.type}</div>
+        </div>`;
+      }).join('');
+      const more = dayRows.length > 3 ? `<div style="font-size:0.65rem;color:#718096;margin-top:1px;">+${dayRows.length - 3} more</div>` : '';
+
+      html += `<div style="min-height:88px;background:${bg};border:${border};border-radius:6px;padding:5px;">
+        <div style="font-size:0.75rem;font-weight:${isToday ? 700 : 400};color:${isToday ? '#4f46e5' : (isWeekend ? '#a0aec0' : '#718096')};margin-bottom:2px;">${day}</div>
+        ${holidayLabel}${pills}${more}
+      </div>`;
+    });
+
+    html += `</div>`;
+    document.getElementById('trackMonthGrid').innerHTML = html;
+  }
+
+  function calPrevMonth() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderMonth(); }
+  function calNextMonth() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderMonth(); }
+
+  // ── Week calendar ────────────────────────────────────────────────────────────
+  function getMonday(date) {
+    const d   = new Date(date);
+    const dow = d.getDay();
+    d.setDate(d.getDate() - (dow === 0 ? 6 : dow - 1));
+    return localDateStr(d);
+  }
+
+  function renderWeek() {
+    if (!calWeekStart) calWeekStart = getMonday(new Date());
+
+    const rows    = getFilteredCalRows();
+    const todayStr = localDateStr(new Date());
+
+    // Week days Mon–Sun
+    const weekDays = [];
+    const wStart   = new Date(calWeekStart + 'T00:00:00');
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(wStart); d.setDate(wStart.getDate() + i);
+      weekDays.push(localDateStr(d));
+    }
+
+    // Build emp → day → [rows]
+    const empDayMap  = {};
+    const empSet     = new Set();
+    const empDeptMap = {};
+    rows.forEach(row => {
+      empSet.add(row.employee_name);
+      if (row.employee_name && row.department) empDeptMap[row.employee_name] = row.department;
+      const from = new Date(row.date_from + 'T00:00:00');
+      const to   = new Date(row.date_to   + 'T00:00:00');
+      for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+        const key = `${row.employee_name}||${localDateStr(d)}`;
+        if (!empDayMap[key]) empDayMap[key] = [];
+        empDayMap[key].push(row);
+      }
+    });
+
+    // Also include all employees even if no events this week (from allUsers if loaded)
+    if (typeof allUsers !== 'undefined') {
+      allUsers.forEach(u => {
+        if (u.name) { empSet.add(u.name); if (u.department) empDeptMap[u.name] = u.department; }
+      });
+    }
+    const employees = [...empSet].sort();
+
+    const fmtD = s => { const d = new Date(s + 'T00:00:00'); return `${d.getDate()}/${d.getMonth()+1}`; };
+    const DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+    // Build holiday map for this week
+    const weekHolidayMap = {};
+    allHolidays.forEach(h => { weekHolidayMap[h.date] = h.name; });
+    const hasHolidayThisWeek = weekDays.some(d => weekHolidayMap[d]);
+
+    let html = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <button class="btn" style="background:#e2e8f0;color:#4a5568;padding:6px 16px;" onclick="calPrevWeek()">‹</button>
+        <span style="font-size:1.05rem;font-weight:700;font-family:'Open Sans',sans-serif;">
+          ${fmtD(weekDays[0])} – ${fmtD(weekDays[6])} ${new Date(calWeekStart+'T00:00:00').getFullYear()}
+        </span>
+        <button class="btn" style="background:#e2e8f0;color:#4a5568;padding:6px 16px;" onclick="calNextWeek()">›</button>
+      </div>
+      <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th style="text-align:left;padding:8px 12px;font-size:0.8rem;color:#718096;background:#f7fafc;border-bottom:2px solid #e2e8f0;min-width:130px;">Employee</th>
+          ${weekDays.map((d, i) => {
+            const isToday   = d === todayStr;
+            const isHoliday = !!weekHolidayMap[d];
+            const dow       = new Date(d + 'T00:00:00').getDay();
+            const isWeekend = dow === 0 || dow === 6;
+            const bg        = isHoliday ? '#fef9c3' : (isToday ? '#e6fffa' : '#f7fafc');
+            const col       = isToday ? '#4f46e5' : (isHoliday ? '#92400e' : (isWeekend ? '#a0aec0' : '#718096'));
+            return `<th style="text-align:center;padding:8px 4px;font-size:0.8rem;
+              color:${col};background:${bg};
+              border-bottom:2px solid ${isHoliday ? '#fde68a' : '#e2e8f0'};min-width:90px;font-weight:${isToday ? 700 : 600};">
+              ${DAY_NAMES[i]}<br><span style="font-size:0.7rem;font-weight:400;">${fmtD(d)}</span></th>`;
+          }).join('')}
+        </tr>
+        ${hasHolidayThisWeek ? `<tr>
+          <td style="padding:4px 12px;font-size:0.75rem;font-weight:700;color:#92400e;background:#fef9c3;border-bottom:1px solid #fde68a;">Public Holiday</td>
+          ${weekDays.map(d => weekHolidayMap[d]
+            ? `<td style="padding:4px;text-align:center;background:#fef9c3;border-bottom:1px solid #fde68a;">
+                <div style="font-size:0.7rem;font-weight:700;color:#92400e;background:#fde68a;border-radius:3px;padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:85px;margin:auto;" title="${weekHolidayMap[d]}">${weekHolidayMap[d]}</div>
+              </td>`
+            : `<td style="background:#fef9c3;border-bottom:1px solid #fde68a;"></td>`
+          ).join('')}
+        </tr>` : ''}
+        </thead>
+        <tbody>
+    `;
+
+    if (!employees.length) {
+      html += `<tr><td colspan="8" style="text-align:center;color:#a0aec0;padding:32px;">No data for this period.</td></tr>`;
+    } else {
+      employees.forEach((emp, ei) => {
+        const rowBg = ei % 2 === 0 ? '#fff' : '#fafafa';
+        html += `<tr>
+          <td style="padding:6px 12px;font-weight:600;font-size:0.85rem;background:${rowBg};border-bottom:1px solid #f0f4f8;white-space:nowrap;">
+            <div>${emp}</div>
+            ${empDeptMap[emp] ? `<div style="font-size:0.72rem;font-weight:400;color:#a0aec0;">${empDeptMap[emp]}</div>` : ''}
+          </td>
+          ${weekDays.map(d => {
+            const isToday   = d === todayStr;
+            const isHoliday = !!weekHolidayMap[d];
+            const bg        = isHoliday ? '#fef9c3' : (isToday ? '#e6fffa' : rowBg);
+            const items     = empDayMap[`${emp}||${d}`] || [];
+            const pills     = items.map(r => {
+              const c   = trackTypeBadge[r.type] || 'background:#e2e8f0;color:#4a5568;';
+              const tip = `${trackTypeLabel[r.type] || r.type} · ${r.ref_no || ''} · ${trackStatusLabel[r.status] || r.status}`;
+              return `<div title="${tip}" onclick="openTrackDetail('${r.id}','${r.request_category}')"
+                style="font-size:0.72rem;font-weight:600;padding:2px 6px;border-radius:4px;margin:1px auto;cursor:pointer;text-align:center;max-width:80px;${c}">
+                ${trackTypeLabel[r.type]}</div>`;
+            }).join('');
+            return `<td style="padding:4px;text-align:center;background:${bg};border-bottom:1px solid #f0f4f8;vertical-align:middle;">${pills}</td>`;
+          }).join('')}
+        </tr>`;
+      });
+    }
+
+    html += `</tbody></table></div>`;
+    document.getElementById('trackWeekGrid').innerHTML = html;
+  }
+
+  function calPrevWeek() {
+    const d = new Date(calWeekStart + 'T00:00:00'); d.setDate(d.getDate() - 7);
+    calWeekStart = localDateStr(d); renderWeek();
+  }
+  function calNextWeek() {
+    const d = new Date(calWeekStart + 'T00:00:00'); d.setDate(d.getDate() + 7);
+    calWeekStart = localDateStr(d); renderWeek();
+  }
+
+  // IMP-02A-3 — Row detail expand
+  function openTrackDetail(id, category) {
+    const row = allTrackingRows.find(r => r.id === id);
+    if (!row) return;
+
+    const panel = document.getElementById('trackDetailPanel');
+    const title = document.getElementById('trackDetailTitle');
+    const body  = document.getElementById('trackDetailBody');
+
+    title.textContent = `${trackTypeLabel[row.type] || row.type} — ${row.ref_no || id}`;
+
+    const dateRange = (row.date_from && row.date_to && row.date_from !== row.date_to)
+      ? `${row.date_from} – ${row.date_to}`
+      : (row.date_from || '—');
+    const half    = row.half_day ? ` (${row.half_day})` : '';
+    const status  = trackStatusLabel[row.status] || row.status;
+    const sBadge  = trackStatusBadge[row.status] || '';
+
+    let rows = [
+      ['Employee',  `${row.employee_name || '—'}${row.department ? ' (' + row.department + ')' : ''}`],
+      ['Ref No',    row.ref_no || '—'],
+      ['Type',      trackTypeLabel[row.type] || row.type],
+      ['Date(s)',   dateRange + half],
+    ];
+    if (row.days_count != null) rows.push(['Days', row.days_count]);
+    if (row.reason)             rows.push(['Reason / Item', row.reason]);
+    rows.push(['Status', `<span style="padding:2px 8px;border-radius:12px;font-size:0.8rem;font-weight:600;${sBadge}">${status}</span>`]);
+    rows.push(['Approver', row.approver_name || '—']);
+    if (row.rejection_reason)   rows.push(['Note', `<span style="color:#718096;">${row.rejection_reason}</span>`]);
+    rows.push(['Submitted', fmtDateShort(row.created_at)]);
+
+    body.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;">
+        ${rows.map(([k, v]) => `
+          <tr>
+            <td style="width:130px;font-weight:600;color:#718096;padding:4px 12px 4px 0;vertical-align:top;">${k}</td>
+            <td style="padding:4px 0;">${v}</td>
+          </tr>`).join('')}
+      </table>
+      <div style="margin-top:16px;">
+        <button class="btn btn-sm" style="background:#744210;color:#fff;"
+          onclick="openOverrideModal('${category === 'leave' ? 'leave' : category}','${row.id}',() => { loadTracking(); closeTrackDetail(); })">
+          Override Status
+        </button>
+      </div>`;
+
+    panel.style.display = '';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function closeTrackDetail() {
+    document.getElementById('trackDetailPanel').style.display = 'none';
+  }
+
+  // ── Override Modal ───────────────────────────────────────────────────────────
+  let overrideState = { type: null, id: null, reloadFn: null };
+
+  const overrideStatusOptions = {
+    leave: [
+      { value: 'approved',  label: 'Approved' },
+      { value: 'rejected',  label: 'Rejected' },
+      { value: 'cancelled', label: 'Cancelled' }
+    ],
+    wfh: [
+      { value: 'approved',  label: 'Approved' },
+      { value: 'rejected',  label: 'Rejected' },
+      { value: 'cancelled', label: 'Cancelled' }
+    ],
+    claim: [
+      { value: 'pending',         label: 'Pending' },
+      { value: 'payment_pending', label: 'Payment Pending' },
+      { value: 'paid',            label: 'Paid' },
+      { value: 'rejected',        label: 'Rejected' },
+      { value: 'cancelled',       label: 'Cancelled' }
+    ]
+  };
+
+  function openOverrideModal(type, id, reloadFn) {
+    overrideState = { type, id, reloadFn };
+    const titles = { leave: 'Override Leave Request', wfh: 'Override WFH Request', claim: 'Override Claim' };
+    document.getElementById('overrideModalTitle').textContent = titles[type] || 'Override Request';
+    const sel = document.getElementById('overrideStatus');
+    sel.innerHTML = (overrideStatusOptions[type] || []).map(o => `<option value="${o.value}">${o.label}</option>`).join('');
+    document.getElementById('overrideReason').value = '';
+    document.getElementById('overrideToast').className = 'toast';
+    document.getElementById('overrideToast').textContent = '';
+    document.getElementById('overrideModal').classList.add('open');
+  }
+
+  function closeOverrideModal() {
+    document.getElementById('overrideModal').classList.remove('open');
+    overrideState = { type: null, id: null, reloadFn: null };
+  }
+
+  async function confirmOverride() {
+    const { type, id, reloadFn } = overrideState;
+    const status = document.getElementById('overrideStatus').value;
+    const reason = document.getElementById('overrideReason').value.trim();
+    const urlMap = { leave: 'leave', wfh: 'wfh', claim: 'claims' };
+    try {
+      const res  = await fetch(`/api/admin/${urlMap[type]}/${id}/override`, {
+        method: 'PUT', headers: authHeaders,
+        body: JSON.stringify({ status, reason })
+      });
+      const data = await res.json();
+      if (!res.ok) { showToast('overrideToast', data.error || 'Override failed.', 'error'); return; }
+      closeOverrideModal();
+      if (typeof reloadFn === 'function') reloadFn();
+    } catch { showToast('overrideToast', 'Network error.', 'error'); }
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────────
+  setTab('overview');
+  loadUsers();
+  setupExportLinks();
+</script>
+</body>
+</html>
+
+
+

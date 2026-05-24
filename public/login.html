@@ -1,0 +1,423 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teamly — Login</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(150deg, #0f172a 0%, #1e1b4b 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 44px 40px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.4rem;
+      color: #4f46e5;
+      font-weight: 900;
+      letter-spacing: 4px;
+    }
+
+    .logo p {
+      font-family: 'Open Sans', sans-serif;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      margin-top: 6px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: 'Open Sans', sans-serif;
+      color: #475569;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      color: #1e293b;
+      background: #f8fafc;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      margin-bottom: 18px;
+      font-family: 'Open Sans', sans-serif;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    input:focus {
+      border-color: #4f46e5;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.12);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 14px;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      font-family: 'Open Sans', sans-serif;
+      letter-spacing: 0.3px;
+    }
+
+    .btn-login:hover   { background: #4338ca; }
+    .btn-login:active  { transform: scale(0.98); }
+    .btn-login:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .error-msg {
+      display: none;
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      text-align: center;
+      margin-top: 14px;
+    }
+
+    .loading-msg {
+      display: none;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-top: 12px;
+    }
+
+    .welcome-banner {
+      background: #eef2ff;
+      border: 1.5px solid #c7d2fe;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    .welcome-banner strong {
+      display: block;
+      color: #3730a3;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+
+    .welcome-banner span {
+      color: #4338ca;
+      font-size: 0.85rem;
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: #94a3b8;
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    .back-link:hover { color: #4f46e5; }
+
+    .hint {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: -12px;
+      margin-bottom: 16px;
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    .version {
+      text-align: center;
+      margin-top: 28px;
+      font-size: 0.75rem;
+      color: #cbd5e0;
+    }
+
+    #view-setpass  { display: none; }
+    #view-choose   { display: none; }
+
+    .choose-title {
+      font-family: 'Open Sans', sans-serif;
+      font-size: 0.85rem;
+      color: #64748b;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .btn-choose {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      padding: 18px 20px;
+      border-radius: 10px;
+      border: 1.5px solid #e2e8f0;
+      background: #f8fafc;
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+      text-align: left;
+      margin-bottom: 12px;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    .btn-choose:hover { border-color: #4f46e5; background: #eef2ff; box-shadow: 0 2px 8px rgba(79,70,229,0.12); }
+    .btn-choose .choose-icon { font-size: 1.7rem; flex-shrink: 0; }
+    .btn-choose .choose-label { font-size: 1rem; font-weight: 700; color: #1e293b; margin-bottom: 2px; }
+    .btn-choose .choose-sub   { font-size: 0.78rem; color: #64748b; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="logo">
+    <h1>TEAMLY</h1>
+    <p>HR & Leave Portal</p>
+  </div>
+
+  <!-- ── View 1: Normal sign-in ── -->
+  <div id="view-login">
+    <label for="usernameInput">Username</label>
+    <input type="text" id="usernameInput" placeholder="Enter your username" autocomplete="username" />
+
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" />
+
+    <button class="btn-login" id="btnLogin">Sign In</button>
+
+    <div class="error-msg"  id="errorMsg"></div>
+    <div class="loading-msg" id="loadingMsg">Signing in...</div>
+  </div>
+
+  <!-- ── View 2: First-time password creation ── -->
+  <div id="view-setpass">
+    <div class="welcome-banner">
+      <strong>Welcome, <span id="welcomeName"></span>!</strong>
+      <span>This is your first sign-in. Create a password to continue.</span>
+    </div>
+
+    <label for="newPass">New Password</label>
+    <input type="password" id="newPass" placeholder="At least 8 characters" autocomplete="new-password" />
+
+    <label for="confirmPass">Confirm Password</label>
+    <input type="password" id="confirmPass" placeholder="Repeat your password" autocomplete="new-password" />
+
+    <button class="btn-login" id="btnSetPass">Create Password & Sign In</button>
+
+    <div class="error-msg"  id="setPassError"></div>
+    <div class="loading-msg" id="setPassLoading">Setting password...</div>
+
+    <span class="back-link" onclick="showLoginView()">← Back</span>
+  </div>
+
+  <!-- ── View 3: Console picker (HOD / Approver) ── -->
+  <div id="view-choose">
+    <p class="choose-title">Welcome back, <strong id="chooseName"></strong>. Where would you like to go?</p>
+
+    <button class="btn-choose" onclick="window.location.href='/dashboard.html'">
+      <span class="choose-icon">👤</span>
+      <div>
+        <div class="choose-label">User Console</div>
+        <div class="choose-sub">Submit leave, WFH, claims · View your history</div>
+      </div>
+    </button>
+
+    <button class="btn-choose" onclick="window.location.href='/admin.html'">
+      <span class="choose-icon">⚙️</span>
+      <div>
+        <div class="choose-label">Admin Console</div>
+        <div class="choose-sub">Approvals, balances, reports &amp; settings</div>
+      </div>
+    </button>
+  </div>
+
+  <div id="sessionExpiredBanner" style="display:none;background:#fee2e2;color:#991b1b;padding:10px 14px;border-radius:8px;font-size:0.88rem;font-weight:500;text-align:center;margin-bottom:16px;">
+    Your session has expired. Please sign in again.
+  </div>
+
+  <div class="version">V.1.2</div>
+</div>
+
+<script>
+  let firstTimeUserId = null;
+
+  // Redirect if already logged in
+  const existingToken = localStorage.getItem('teamly_token');
+  if (existingToken) {
+    fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${existingToken}` } })
+      .then(r => {
+        if (r.ok) redirectByRole(JSON.parse(localStorage.getItem('teamly_user') || '{}').role);
+        else {
+          localStorage.removeItem('teamly_token');
+          localStorage.removeItem('teamly_user');
+        }
+      })
+      .catch(() => {});
+  }
+
+  if (sessionStorage.getItem('teamly_session_expired')) {
+    sessionStorage.removeItem('teamly_session_expired');
+    document.getElementById('sessionExpiredBanner').style.display = 'block';
+  }
+
+  document.getElementById('btnLogin').addEventListener('click', login);
+  document.getElementById('usernameInput').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  document.getElementById('btnSetPass').addEventListener('click', setPassword);
+  document.getElementById('confirmPass').addEventListener('keydown', e => { if (e.key === 'Enter') setPassword(); });
+
+  async function login() {
+    const username = document.getElementById('usernameInput').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!username) { showError('errorMsg', 'Please enter your username.'); return; }
+    if (!password) { showError('errorMsg', 'Please enter your password.'); return; }
+
+    setLoading('btnLogin', 'loadingMsg', true);
+    hideError('errorMsg');
+
+    try {
+      const res  = await fetch('/api/auth/login', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+
+      if (data.first_time) {
+        firstTimeUserId = data.user_id;
+        document.getElementById('welcomeName').textContent = data.name;
+        showSetPassView();
+        return;
+      }
+
+      if (!res.ok) { showError('errorMsg', data.error || 'Sign in failed.'); return; }
+
+      storeAndRedirect(data);
+    } catch {
+      showError('errorMsg', 'Network error. Please check your connection.');
+    } finally {
+      setLoading('btnLogin', 'loadingMsg', false);
+    }
+  }
+
+  async function setPassword() {
+    const newPass     = document.getElementById('newPass').value;
+    const confirmPass = document.getElementById('confirmPass').value;
+
+    if (newPass.length < 8) { showError('setPassError', 'Password must be at least 8 characters.'); return; }
+    if (newPass !== confirmPass) { showError('setPassError', 'Passwords do not match.'); return; }
+
+    setLoading('btnSetPass', 'setPassLoading', true);
+    hideError('setPassError');
+
+    try {
+      const res  = await fetch('/api/auth/set-password', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ user_id: firstTimeUserId, password: newPass })
+      });
+      const data = await res.json();
+
+      if (!res.ok) { showError('setPassError', data.error || 'Failed to set password.'); return; }
+
+      storeAndRedirect(data);
+    } catch {
+      showError('setPassError', 'Network error. Please check your connection.');
+    } finally {
+      setLoading('btnSetPass', 'setPassLoading', false);
+    }
+  }
+
+  function storeAndRedirect(data) {
+    localStorage.setItem('teamly_token', data.token);
+    localStorage.setItem('teamly_user',  JSON.stringify(data.user));
+    redirectByRole(data.user.role);
+  }
+
+  function redirectByRole(role) {
+    if (!role) return;
+    if (role === 'superadmin') { window.location.href = '/admin.html'; return; }
+    if (role === 'hod' || role === 'approver_a') {
+      const user = JSON.parse(localStorage.getItem('teamly_user') || '{}');
+      showChooseView(user.name || '');
+      return;
+    }
+    window.location.href = '/dashboard.html';
+  }
+
+  function showChooseView(name) {
+    document.getElementById('view-login').style.display   = 'none';
+    document.getElementById('view-setpass').style.display = 'none';
+    document.getElementById('view-choose').style.display  = 'block';
+    document.getElementById('chooseName').textContent     = name;
+  }
+
+  function showSetPassView() {
+    document.getElementById('view-login').style.display   = 'none';
+    document.getElementById('view-setpass').style.display = 'block';
+    document.getElementById('newPass').focus();
+  }
+
+  function showLoginView() {
+    document.getElementById('view-setpass').style.display = 'none';
+    document.getElementById('view-login').style.display   = '';
+    firstTimeUserId = null;
+    document.getElementById('usernameInput').value = '';
+    document.getElementById('newPass').value       = '';
+    document.getElementById('confirmPass').value   = '';
+    hideError('setPassError');
+  }
+
+  function showError(id, msg) {
+    const el = document.getElementById(id);
+    el.textContent   = msg;
+    el.style.display = 'block';
+  }
+
+  function hideError(id) {
+    document.getElementById(id).style.display = 'none';
+  }
+
+  function setLoading(btnId, loadingId, on) {
+    document.getElementById(btnId).disabled              = on;
+    document.getElementById(loadingId).style.display     = on ? 'block' : 'none';
+  }
+</script>
+
+</body>
+</html>
+

@@ -1,0 +1,33 @@
+﻿node_modules/
+.env
+.env.local
+
+# Logs
+*.log
+
+# Internal docs — never commit
+*.md
+!README.md
+!CHANGELOG.md
+!MANUAL.md
+status.md
+
+# Claude Code settings
+.claude/
+
+# Test artifacts
+playwright-report/
+test-results/
+tests/.auth/
+tests/.server.pid
+test.db
+test.db-wal
+test.db-shm
+test.db-journal
+
+# Demo mode local database
+demo.db
+demo.db-wal
+demo.db-shm
+demo.db-journal
+

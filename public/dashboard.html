@@ -1,0 +1,2035 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teamly — Dashboard</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      min-height: 100vh;
+      color: #1e293b;
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      background: #0f172a;
+      color: white;
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.06);
+    }
+    .topbar-logo {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: #818cf8;
+    }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .topbar-name  { font-size: 0.9rem; font-weight: 600; }
+    .role-badge {
+      padding: 3px 10px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .btn-logout {
+      padding: 6px 14px;
+      background: rgba(255,255,255,0.08);
+      color: #cbd5e1;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+      transition: background 0.15s;
+    }
+    .btn-logout:hover { background: rgba(255,255,255,0.15); color: white; }
+    .btn-clock-in {
+      padding: 6px 14px;
+      background: rgba(56,161,105,0.55);
+      color: white;
+      border: 1px solid rgba(56,161,105,0.7);
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+      transition: background 0.15s;
+    }
+    .btn-clock-in:hover:not(:disabled) { background: rgba(56,161,105,0.8); }
+    .btn-clock-in:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-clock-out {
+      padding: 6px 14px;
+      background: rgba(229,62,62,0.55);
+      color: white;
+      border: 1px solid rgba(229,62,62,0.7);
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+      transition: background 0.15s;
+    }
+    .btn-clock-out:hover:not(:disabled) { background: rgba(229,62,62,0.8); }
+    .btn-clock-out:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── Tab Bar ── */
+    .tab-bar {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      overflow-x: auto;
+      padding: 0 16px;
+      gap: 2px;
+    }
+    .tab-bar::-webkit-scrollbar { display: none; }
+    .tab-btn {
+      padding: 14px 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: 'Open Sans', sans-serif;
+      color: #94a3b8;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn:hover { color: #4f46e5; }
+    .tab-btn.active { color: #4f46e5; border-bottom-color: #4f46e5; }
+    .badge-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #e53e3e;
+      color: white;
+      font-size: 0.68rem;
+      font-weight: 700;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 4px;
+      border-radius: 9px;
+      margin-left: 6px;
+    }
+
+    /* ── Container ── */
+    .container { max-width: 900px; margin: 0 auto; padding: 24px 20px; }
+
+    /* ── Card ── */
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 24px 28px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+      margin-bottom: 16px;
+      border: 1px solid #f1f5f9;
+    }
+    .card-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #94a3b8;
+      margin-bottom: 20px;
+    }
+
+    /* ── AL Balance ── */
+    .balance-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px;
+    }
+    .balance-item {
+      text-align: center;
+      padding: 18px 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .balance-item.highlight { background: #eef2ff; border-color: #c7d2fe; }
+    .balance-num {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #4f46e5;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+    .balance-num.dim { color: #cbd5e0; }
+    .balance-label { font-size: 0.78rem; color: #718096; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .balance-sub   { font-size: 0.75rem; color: #a0aec0; margin-top: 4px; }
+    .expired-tag {
+      display: inline-block;
+      background: #fed7d7;
+      color: #c53030;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 8px;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 20px; }
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 6px;
+    }
+    .req { color: #e53e3e; }
+    select, input[type="date"], textarea {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #1e293b;
+      background: #f8fafc;
+      outline: none;
+      font-family: 'Open Sans', sans-serif;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    select:focus, input[type="date"]:focus, textarea:focus {
+      border-color: #4f46e5;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(79,70,229,0.12);
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 580px) { .form-row { grid-template-columns: 1fr; } }
+
+    .half-day-opts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+    .hd-opt {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 16px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #718096;
+      background: white;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .hd-opt.selected { border-color: #4f46e5; background: #eef2ff; color: #4f46e5; }
+    .hd-opt input[type="radio"] { display: none; }
+
+    .file-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 14px;
+      border: 1.5px dashed #cbd5e0;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      color: #718096;
+      background: #f8fafc;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .file-label:hover { border-color: #4f46e5; color: #4f46e5; }
+    .file-label .fname { color: #2d3748; font-weight: 600; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      padding: 11px 28px;
+      background: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+      transition: opacity 0.15s;
+    }
+    .btn-primary:hover   { opacity: 0.9; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-green {
+      padding: 8px 16px;
+      background: #38a169;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+      transition: opacity 0.15s;
+    }
+    .btn-green:hover { opacity: 0.9; }
+    .btn-red {
+      padding: 8px 16px;
+      background: #e53e3e;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+      transition: opacity 0.15s;
+    }
+    .btn-red:hover { opacity: 0.9; }
+    .btn-outline {
+      padding: 8px 16px;
+      background: transparent;
+      color: #718096;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Open Sans', sans-serif;
+      transition: all 0.15s;
+    }
+    .btn-outline:hover { border-color: #4f46e5; color: #4f46e5; }
+    .quick-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    /* ── Alerts ── */
+    .alert { padding: 12px 16px; border-radius: 8px; font-size: 0.875rem; font-weight: 600; margin-bottom: 16px; }
+    .alert-error   { background: #fed7d7; color: #742a2a; }
+    .alert-success { background: #c6f6d5; color: #22543d; }
+    .alert-info    { background: #ebf8ff; color: #2c5282; font-weight: 500; }
+
+    /* ── History list ── */
+    .history-list { list-style: none; }
+    .history-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid #f0f4f8;
+      gap: 12px;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .h-left  { flex: 1; }
+    .h-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+    .h-type  { font-weight: 700; font-size: 0.9rem; color: #2d3748; margin-bottom: 3px; }
+    .h-dates { font-size: 0.8rem; color: #718096; }
+    .h-reject { font-size: 0.78rem; color: #e53e3e; margin-top: 4px; font-style: italic; }
+    .h-approver { font-size: 0.75rem; color: #a0aec0; margin-top: 3px; }
+    .h-day-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      background: #ebf8ff;
+      color: #2b6cb0;
+      padding: 1px 7px;
+      border-radius: 4px;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+
+    /* ── Status badges ── */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-pending         { background: #fef3c7; color: #92400e; }
+    .badge-approved        { background: #c6f6d5; color: #22543d; }
+    .badge-rejected        { background: #fed7d7; color: #742a2a; }
+    .badge-cancelled       { background: #e2e8f0; color: #4a5568; }
+    .badge-payment_pending { background: #dbeafe; color: #1e40af; }
+    .badge-paid            { background: #c6f6d5; color: #22543d; }
+
+    /* ── Approval cards ── */
+    .approval-card {
+      padding: 18px;
+      background: #f8fafc;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 12px;
+    }
+    .a-employee { font-weight: 700; font-size: 0.95rem; color: #2d3748; margin-bottom: 6px; }
+    .a-meta     { font-size: 0.82rem; color: #718096; line-height: 1.7; margin-bottom: 12px; }
+    .a-meta strong { color: #2d3748; }
+    .a-actions  { display: flex; gap: 10px; }
+
+    /* ── Empty state ── */
+    .empty-state { text-align: center; padding: 36px 20px; color: #a0aec0; }
+    .empty-state .icon { font-size: 2rem; margin-bottom: 8px; }
+    .empty-state p { font-size: 0.875rem; }
+
+    /* ── Pending alert banner ── */
+    .pending-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .pending-count { font-size: 1.05rem; font-weight: 700; color: #e53e3e; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 20px;
+    }
+    .modal {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .modal-title { font-size: 1.1rem; font-weight: 700; color: #2d3748; margin-bottom: 6px; }
+    .modal-sub   { font-size: 0.875rem; color: #718096; margin-bottom: 20px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      font-family: 'Open Sans', sans-serif;
+      z-index: 999;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      white-space: nowrap;
+    }
+    .toast-success { background: #c6f6d5; color: #22543d; }
+    .toast-error   { background: #fed7d7; color: #742a2a; }
+
+    /* ── Spinner ── */
+    .spin {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.6s linear infinite;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── MC viewer link ── */
+    a.mc-link { color: #4299e1; font-weight: 600; font-size: 0.8rem; }
+    a.mc-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body x-data="dashboard()" x-init="init()">
+
+<!-- ═══ Top Bar ═══ -->
+<header class="topbar">
+  <span class="topbar-logo">TEAMLY</span>
+  <div class="topbar-right">
+    <span class="topbar-name" x-text="user?.name || ''"></span>
+    <span class="role-badge" x-text="roleLabel"></span>
+    <button class="btn-logout" @click="logout()">Sign Out</button>
+  </div>
+</header>
+
+<!-- ═══ Tab Bar ═══ -->
+<nav class="tab-bar">
+  <button class="tab-btn" :class="{ active: tab === 'overview'  }" @click="tab = 'overview'">Overview</button>
+  <button class="tab-btn" :class="{ active: tab === 'clock'  }" @click="tab = 'clock'">Clock</button>
+  <button class="tab-btn" :class="{ active: tab === 'submit'  }" @click="tab = 'submit'">Leave</button>
+  <button class="tab-btn" :class="{ active: tab === 'wfh'    }" @click="tab = 'wfh'">WFH</button>
+  <button class="tab-btn" :class="{ active: tab === 'claims' }" @click="tab = 'claims'">Claims</button>
+  <button class="tab-btn" :class="{ active: tab === 'history' }" @click="tab = 'history'">My History</button>
+  <button class="tab-btn" :class="{ active: tab === 'calendar' }" @click="tab = 'calendar'; loadCalendar()">Team Calendar</button>
+  <button class="tab-btn" :class="{ active: tab === 'approvals' }" @click="tab = 'approvals'" x-show="isApprover">
+    Approvals
+    <span class="badge-count" x-text="pendingCount" x-show="pendingCount > 0"></span>
+  </button>
+  <button class="tab-btn" :class="{ active: tab === 'account' }" @click="tab = 'account'">Account</button>
+</nav>
+
+<!-- ═══ Main Content ═══ -->
+<main class="container">
+
+  <!-- ─── OVERVIEW ─── -->
+  <div x-show="tab === 'overview'">
+
+    <!-- AL Balance -->
+    <div class="card" x-show="balance">
+      <div class="card-title">Annual Leave Balance — <span x-text="balance?.year"></span></div>
+      <div class="balance-grid">
+        <div class="balance-item">
+          <div class="balance-num" :class="{ dim: !balance?.available_a }" x-text="balance?.available_a ?? '—'"></div>
+          <div class="balance-label">Carry-Forward</div>
+          <div class="balance-sub">of <span x-text="balance?.bucket_a"></span> days</div>
+        </div>
+        <div class="balance-item">
+          <div class="balance-num" :class="{ dim: !balance?.available_b }" x-text="balance?.available_b ?? '—'"></div>
+          <div class="balance-label">Current Year</div>
+          <div class="balance-sub">of <span x-text="balance?.bucket_b"></span> days allocated</div>
+        </div>
+        <div class="balance-item highlight">
+          <div class="balance-num" :class="{ dim: !balance?.total_available }" x-text="balance?.total_available ?? '—'"></div>
+          <div class="balance-label" style="color: #4f46e5;">Total Available</div>
+          <div class="balance-sub">days remaining</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Requests Summary -->
+    <div class="card">
+      <div class="card-title">My Requests</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;">
+
+        <!-- Leave -->
+        <div>
+          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#718096;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #e2e8f0;">Leave</div>
+          <template x-for="lv in myLeaves.slice(0,3)" :key="lv.id">
+            <div style="margin-bottom:10px;">
+              <div style="font-size:0.85rem;font-weight:600;color:#2d3748;" x-text="fmtType(lv.type)"></div>
+              <div style="font-size:0.78rem;color:#718096;">
+                <span x-text="fmtDate(lv.start_date)"></span>
+                <template x-if="lv.start_date !== lv.end_date">
+                  <span> – <span x-text="fmtDate(lv.end_date)"></span></span>
+                </template>
+                &nbsp;·&nbsp;<span x-text="fmtDays(lv.days_count)"></span>
+              </div>
+              <span class="badge" :class="'badge-' + lv.status" x-text="lv.status"></span>
+            </div>
+          </template>
+          <div x-show="myLeaves.length === 0" style="font-size:0.82rem;color:#a0aec0;padding:6px 0;">None yet</div>
+          <button class="btn-primary" style="margin-top:6px;font-size:0.78rem;padding:5px 12px;" @click="tab = 'submit'">+ Submit Leave</button>
+        </div>
+
+        <!-- WFH -->
+        <div>
+          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#718096;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #e2e8f0;">Work From Home</div>
+          <template x-for="w in myWFH.slice(0,3)" :key="w.id">
+            <div style="margin-bottom:10px;">
+              <div style="font-size:0.85rem;font-weight:600;color:#2d3748;" x-text="fmtDate(w.date)"></div>
+              <div style="font-size:0.78rem;color:#718096;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" x-text="w.reason"></div>
+              <span class="badge" :class="'badge-' + w.status" x-text="w.status"></span>
+            </div>
+          </template>
+          <div x-show="myWFH.length === 0" style="font-size:0.82rem;color:#a0aec0;padding:6px 0;">None yet</div>
+          <button class="btn-outline" style="margin-top:6px;font-size:0.78rem;padding:5px 12px;" @click="tab = 'wfh'">+ Submit WFH</button>
+        </div>
+
+        <!-- Claims -->
+        <div>
+          <div style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:#718096;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid #e2e8f0;">Claims</div>
+          <template x-for="c in myClaims.slice(0,3)" :key="c.id">
+            <div style="margin-bottom:10px;">
+              <div style="font-size:0.85rem;font-weight:600;color:#2d3748;" x-text="c.item"></div>
+              <div style="font-size:0.78rem;color:#718096;">RM <span x-text="Number(c.amount).toFixed(2)"></span></div>
+              <span class="badge" :class="'badge-' + c.status" x-text="fmtClaimStatus(c.status)"></span>
+            </div>
+          </template>
+          <div x-show="myClaims.length === 0" style="font-size:0.82rem;color:#a0aec0;padding:6px 0;">None yet</div>
+          <button class="btn-outline" style="margin-top:6px;font-size:0.78rem;padding:5px 12px;" @click="tab = 'claims'">+ Submit Claim</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Public Holidays + Blackout Dates -->
+    <div class="card" x-show="myHolidays.length > 0 || blackoutDates.length > 0">
+      <div class="card-title">Public Holidays &amp; Blackout Dates</div>
+      <p style="font-size:0.82rem;color:#718096;margin-bottom:12px;">Leave cannot be applied on these dates.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <template x-for="h in myHolidays" :key="'ph-'+h.id">
+          <div style="padding:5px 12px;background:#fef9c3;color:#713f12;border-radius:6px;font-size:0.8rem;font-weight:600;border:1px solid #fde68a;">
+            <span x-text="fmtDate(h.date)"></span>
+            <span style="font-weight:400;margin-left:4px;" x-text="'— ' + h.name"></span>
+          </div>
+        </template>
+        <template x-for="d in groupedBlackoutDates" :key="'bo-'+d.start">
+          <div style="padding:5px 12px;background:#fed7d7;color:#742a2a;border-radius:6px;font-size:0.8rem;font-weight:600;">
+            <span x-text="d.start === d.end ? fmtDate(d.start) : fmtDate(d.start) + ' – ' + fmtDate(d.end)"></span>
+            <span x-show="d.reason" style="font-weight:400;margin-left:4px;" x-text="'— ' + d.reason"></span>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Pending approvals alert -->
+    <div class="card" x-show="isApprover && pendingCount > 0">
+      <div class="card-title">Action Required</div>
+      <div class="pending-banner">
+        <span class="pending-count">
+          <span x-text="pendingCount"></span> request<span x-show="pendingCount !== 1">s</span> pending your approval
+        </span>
+        <button class="btn-primary" @click="tab = 'approvals'">Review Now →</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── CLOCK ─── -->
+  <div x-show="tab === 'clock'">
+    <div class="card" style="text-align:center;">
+
+      <!-- Status display -->
+      <div style="text-align:center;padding:24px 0 20px;">
+        <div style="font-size:3.5rem;line-height:1;margin-bottom:10px;" x-text="clockStatus === 'IN' ? '🟢' : '🔴'"></div>
+        <div style="font-size:1.6rem;font-weight:900;letter-spacing:1px;" :style="clockStatus === 'IN' ? 'color:#276749' : 'color:#718096'" x-text="clockStatus === 'IN' ? 'Clocked IN' : 'Clocked OUT'"></div>
+        <div style="font-size:0.85rem;color:#a0aec0;margin-top:6px;" x-show="lastClock">
+          Last: <span x-text="clockStatus"></span> · <span x-text="lastClock?.timestamp_display"></span>
+        </div>
+        <div style="font-size:0.85rem;color:#a0aec0;margin-top:6px;" x-show="!lastClock">No records yet.</div>
+      </div>
+
+      <!-- Note input -->
+      <div class="form-group">
+        <label class="form-label">Note <span style="color:#a0aec0;font-weight:400;">(optional)</span></label>
+        <input type="text" x-model="clockNote" placeholder="e.g. Working from office"
+          style="width:100%;padding:11px 14px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;outline:none;box-shadow:3px 3px 0 #e2e8f0;font-family:'Open Sans',sans-serif;" />
+      </div>
+      <p style="font-size:0.8rem;color:#a0aec0;margin-bottom:14px;">📍 Your location will be captured automatically — please allow location access when prompted by your browser.</p>
+
+      <!-- Clock IN / OUT buttons -->
+      <div style="display:flex;gap:12px;width:55%;margin:0 auto;">
+        <button class="btn-clock-in" style="flex:1;"
+          @click="doClock('IN')" :disabled="clockLoading || clockStatus === 'IN'">
+          <span class="spin" x-show="clockLoading && clockPending === 'IN'"></span>
+          Clock IN
+        </button>
+        <button class="btn-clock-out" style="flex:1;"
+          @click="doClock('OUT')" :disabled="clockLoading || clockStatus === 'OUT'">
+          <span class="spin" x-show="clockLoading && clockPending === 'OUT'"></span>
+          Clock OUT
+        </button>
+      </div>
+
+      <div class="alert alert-error" style="margin-top:4px;margin-bottom:8px;" x-show="clockError" x-text="clockError"></div>
+    </div>
+
+    <!-- Recent records -->
+    <div class="card" x-show="clockRecords.length > 0">
+      <div class="card-title">Recent Clock Records</div>
+      <ul class="history-list">
+        <template x-for="r in clockRecords.filter(r => new Date(r.timestamp) >= new Date(Date.now() - 2*24*60*60*1000))" :key="r.id">
+          <li class="history-item">
+            <div class="h-left">
+              <div class="h-type" :style="r.action === 'IN' ? 'color:#276749' : 'color:#e53e3e'"
+                x-text="r.action === 'IN' ? '→ Clock IN' : '← Clock OUT'"></div>
+              <div class="h-dates" x-show="r.note" x-text="r.note"></div>
+              <div class="h-dates" x-show="r.latitude">
+                📍 <span x-text="Number(r.latitude).toFixed(5)"></span>, <span x-text="Number(r.longitude).toFixed(5)"></span>
+              </div>
+            </div>
+            <div class="h-right">
+              <span style="font-size:0.82rem;color:#2d3748;font-weight:600;" x-text="r.timestamp_display"></span>
+            </div>
+          </li>
+        </template>
+      </ul>
+    </div>
+    <div class="card" x-show="clockRecords.length === 0">
+      <div class="empty-state">
+        <div class="icon">⏱</div>
+        <p>No clock records yet. Use the button above to clock in.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SUBMIT LEAVE ─── -->
+  <div x-show="tab === 'submit'">
+    <div class="card">
+      <div class="card-title">Submit Leave Request</div>
+
+      <div class="alert alert-success" x-show="formSuccess" x-text="formSuccess"></div>
+      <div class="alert alert-error"   x-show="formError"   x-text="formError"></div>
+
+      <!-- Type -->
+      <div class="form-group">
+        <label class="form-label">Leave Type <span class="req">*</span></label>
+        <select x-model="form.type" @change="onTypeChange()">
+          <option value="AL">Annual Leave (AL)</option>
+          <option value="sick">Sick Leave</option>
+          <option value="emergency">Emergency Leave</option>
+          <option value="comp_off">Comp Off</option>
+          <option value="UPL">Unpaid Leave (UPL)</option>
+        </select>
+      </div>
+
+      <!-- Info banners -->
+      <div class="alert alert-info" x-show="form.type === 'AL' || form.type === 'UPL'">
+        ⓘ At least <strong>5 days advance notice</strong> required for <span x-text="form.type === 'AL' ? 'Annual Leave' : 'Unpaid Leave'"></span>.
+      </div>
+      <div class="alert alert-info" x-show="form.type === 'AL' && balance">
+        AL available: <strong x-text="balance?.total_available"></strong> day(s)
+        <template x-if="!balance?.bucket_a_expired && balance?.available_a > 0">
+          <span style="color:#718096;font-size:0.92em;">
+            &nbsp;(incl. <strong x-text="balance?.available_a"></strong> day(s) carry-forward · expires 31 Mar)
+          </span>
+        </template>
+      </div>
+
+      <!-- Date range -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Start Date <span class="req">*</span></label>
+          <input type="date" x-model="form.start_date" @change="onStartDateChange()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">End Date <span class="req">*</span></label>
+          <input type="date" x-model="form.end_date" :disabled="!!form.half_day" />
+        </div>
+      </div>
+
+      <!-- Live days preview -->
+      <div x-show="leavePreview" style="margin:-4px 0 12px;padding:10px 14px;background:#f0fff4;border:1.5px solid #9ae6b4;border-radius:8px;font-size:0.875rem;">
+        <span style="font-weight:700;color:#276749;">
+          <span x-text="leavePreview?.days === 0.5 ? '½' : leavePreview?.days"></span>
+          working day<span x-show="leavePreview?.days !== 1 && leavePreview?.days !== 0.5">s</span> will be deducted
+        </span>
+        <span x-show="leavePreview?.weekendDays > 0 || leavePreview?.skipped?.length > 0" style="color:#718096;margin-left:4px;">· Excludes: </span>
+        <span x-show="leavePreview?.weekendDays > 0" style="font-weight:600;color:#4a5568;" x-text="leavePreview?.weekendDays + ' weekend day' + (leavePreview?.weekendDays !== 1 ? 's' : '')"></span>
+        <span x-show="leavePreview?.weekendDays > 0 && leavePreview?.skipped?.length > 0" style="color:#718096;">, </span>
+        <span x-show="leavePreview?.skipped?.length > 0" style="font-weight:600;color:#744210;" x-text="leavePreview?.skipped?.join(', ')"></span>
+        <span x-show="leavePreview?.days === 0" style="color:#e53e3e;font-weight:600;"> — no working days in this range</span>
+      </div>
+
+      <!-- Half day -->
+      <div class="form-group">
+        <label class="form-label">Session</label>
+        <div class="half-day-opts">
+          <label class="hd-opt" :class="{ selected: !form.half_day }">
+            <input type="radio" name="hd" value="" x-model="form.half_day" />
+            Full Day
+          </label>
+          <label class="hd-opt" :class="{ selected: form.half_day === 'AM' }">
+            <input type="radio" name="hd" value="AM" x-model="form.half_day" @change="onHalfDayChange()" />
+            AM Half
+          </label>
+          <label class="hd-opt" :class="{ selected: form.half_day === 'PM' }">
+            <input type="radio" name="hd" value="PM" x-model="form.half_day" @change="onHalfDayChange()" />
+            PM Half
+          </label>
+        </div>
+      </div>
+
+      <!-- Reason -->
+      <div class="form-group">
+        <label class="form-label">
+          Reason
+          <span class="req" x-show="requiresReason">*</span>
+        </label>
+        <textarea
+          x-model="form.reason"
+          :placeholder="requiresReason ? 'Required — please provide details' : 'Optional'">
+        </textarea>
+      </div>
+
+      <!-- MC attachment (sick only) -->
+      <div class="form-group" x-show="requiresMC">
+        <label class="form-label">MC Attachment <span class="req">*</span></label>
+        <label class="file-label" for="mcFile">
+          <span x-show="!form.mc_filename">📎 Click to upload MC (image or PDF, max 5MB)</span>
+          <span class="fname" x-show="form.mc_filename">✓ <span x-text="form.mc_filename"></span></span>
+        </label>
+        <input type="file" id="mcFile" accept="image/*,.pdf" style="display:none" @change="handleFile($event)" />
+      </div>
+
+      <button class="btn-primary" @click="submitLeave()" :disabled="formLoading">
+        <span class="spin" x-show="formLoading"></span>
+        <span x-text="formLoading ? 'Submitting…' : 'Submit Leave Request'"></span>
+      </button>
+    </div>
+
+    <!-- Public Holidays + Blackout dates notice -->
+    <div class="card" x-show="myHolidays.length > 0 || blackoutDates.length > 0">
+      <div class="card-title">Public Holidays / Blackout Dates</div>
+      <p style="font-size:0.84rem;color:#718096;margin-bottom:14px;">These dates are unavailable for leave:</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        <template x-for="h in myHolidays" :key="'ph-'+h.id">
+          <div style="padding:5px 12px;background:#fef9c3;color:#713f12;border-radius:6px;font-size:0.8rem;font-weight:600;border:1px solid #fde68a;">
+            <span x-text="fmtDate(h.date)"></span>
+            <span style="font-weight:400;margin-left:4px;" x-text="'— ' + h.name"></span>
+          </div>
+        </template>
+        <template x-for="d in groupedBlackoutDates" :key="'bo-'+d.start">
+          <div style="padding:5px 12px;background:#fed7d7;color:#742a2a;border-radius:6px;font-size:0.8rem;font-weight:600;">
+            <span x-text="d.start === d.end ? fmtDate(d.start) : fmtDate(d.start) + ' – ' + fmtDate(d.end)"></span>
+            <span x-show="d.reason" style="font-weight:400;margin-left:4px;" x-text="'— ' + d.reason"></span>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Active Leave Requests -->
+    <div class="card" x-show="myLeaves.filter(l => l.status === 'pending').length > 0">
+      <div class="card-title">Active Leave Requests</div>
+      <ul class="history-list">
+        <template x-for="lv in myLeaves.filter(l => l.status === 'pending')" :key="lv.id">
+          <li class="history-item">
+            <div class="h-left">
+              <div class="h-type" x-text="fmtType(lv.type)"></div>
+              <div class="h-dates">
+                <span x-text="fmtDate(lv.start_date)"></span>
+                <template x-if="lv.start_date !== lv.end_date">
+                  <span> – <span x-text="fmtDate(lv.end_date)"></span></span>
+                </template>
+                &nbsp;·&nbsp;<span x-text="fmtDays(lv.days_count)"></span>
+                <span class="h-day-tag" x-show="lv.half_day" x-text="lv.half_day + ' half'"></span>
+              </div>
+              <div class="h-approver" x-show="lv.approver_name">Approver: <span x-text="lv.approver_name"></span></div>
+            </div>
+            <div class="h-right">
+              <span class="badge" :class="'badge-' + lv.status" x-text="lv.status"></span>
+              <span style="font-size:0.72rem;color:#a0aec0;" x-text="fmtDateShort(lv.created_at)"></span>
+              <button class="btn-outline" style="font-size:0.75rem;padding:4px 10px;"
+                @click="cancelLeave(lv.id)">Cancel</button>
+            </div>
+          </li>
+        </template>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ─── MY HISTORY ─── -->
+  <div x-show="tab === 'history'">
+
+    <!-- Leave History -->
+    <div class="card">
+      <div class="card-title">Leave History</div>
+      <div class="empty-state" x-show="myLeaves.filter(l => ['approved','rejected','cancelled'].includes(l.status)).length === 0">
+        <div class="icon">📋</div>
+        <p>No completed leave requests yet.</p>
+      </div>
+      <ul class="history-list" x-show="myLeaves.filter(l => ['approved','rejected','cancelled'].includes(l.status)).length > 0">
+        <template x-for="lv in myLeaves.filter(l => ['approved','rejected','cancelled'].includes(l.status))" :key="lv.id">
+          <li class="history-item">
+            <div class="h-left">
+              <div class="h-type" x-text="fmtType(lv.type)"></div>
+              <div class="h-dates">
+                <span x-text="fmtDate(lv.start_date)"></span>
+                <template x-if="lv.start_date !== lv.end_date">
+                  <span> – <span x-text="fmtDate(lv.end_date)"></span></span>
+                </template>
+                &nbsp;·&nbsp;<span x-text="fmtDays(lv.days_count)"></span>
+                <span class="h-day-tag" x-show="lv.half_day" x-text="lv.half_day + ' half'"></span>
+              </div>
+              <div class="h-approver" x-show="lv.approver_name">Approver: <span x-text="lv.approver_name"></span></div>
+              <div class="h-reject" x-show="lv.status === 'rejected' && lv.rejection_reason">
+                Rejected: "<span x-text="lv.rejection_reason"></span>"
+              </div>
+            </div>
+            <div class="h-right">
+              <span class="badge" :class="'badge-' + lv.status" x-text="lv.status"></span>
+              <span style="font-size:0.72rem;color:#a0aec0;" x-text="fmtDateShort(lv.created_at)"></span>
+              <button class="btn-outline" style="font-size:0.75rem;padding:4px 10px;"
+                x-show="lv.status === 'pending' && lv.user_id === user?.id"
+                @click="cancelLeave(lv.id)">Cancel</button>
+              <button class="btn-outline" style="font-size:0.75rem;padding:4px 10px;border-color:#e53e3e;color:#e53e3e;"
+                x-show="lv.status === 'approved' && lv.type === 'AL' && canCancelApproved(lv.start_date)"
+                @click="openCancelApprovedModal(lv.id)">Cancel Leave</button>
+            </div>
+          </li>
+        </template>
+      </ul>
+    </div>
+
+    <!-- WFH History -->
+    <div class="card">
+      <div class="card-title">WFH History</div>
+      <div class="empty-state" x-show="myWFH.filter(w => ['approved','rejected','cancelled'].includes(w.status)).length === 0">
+        <div class="icon">🏠</div>
+        <p>No completed WFH requests yet.</p>
+      </div>
+      <ul class="history-list" x-show="myWFH.filter(w => ['approved','rejected','cancelled'].includes(w.status)).length > 0">
+        <template x-for="w in myWFH.filter(w => ['approved','rejected','cancelled'].includes(w.status))" :key="w.id">
+          <li class="history-item">
+            <div class="h-left">
+              <div class="h-type" x-text="fmtDate(w.date)"></div>
+              <div class="h-dates" x-show="w.reason" x-text="w.reason"></div>
+              <div class="h-approver" x-show="w.approver_name">Approver: <span x-text="w.approver_name"></span></div>
+              <div class="h-reject" x-show="w.status === 'rejected' && w.rejection_reason">
+                Rejected: "<span x-text="w.rejection_reason"></span>"
+              </div>
+            </div>
+            <div class="h-right">
+              <span class="badge" :class="'badge-' + w.status" x-text="w.status"></span>
+              <span style="font-size:0.72rem;color:#a0aec0;" x-text="fmtDateShort(w.created_at)"></span>
+              <button class="btn-outline" style="font-size:0.75rem;padding:4px 10px;"
+                x-show="w.status === 'pending'"
+                @click="cancelWFH(w.id)">Cancel</button>
+            </div>
+          </li>
+        </template>
+      </ul>
+    </div>
+
+    <!-- Claims History -->
+    <div class="card">
+      <div class="card-title">Claims History</div>
+      <div class="empty-state" x-show="myClaims.filter(c => ['paid','rejected','cancelled'].includes(c.status)).length === 0">
+        <div class="icon">🧾</div>
+        <p>No completed claims yet.</p>
+      </div>
+      <ul class="history-list" x-show="myClaims.filter(c => ['paid','rejected','cancelled'].includes(c.status)).length > 0">
+        <template x-for="c in myClaims.filter(c => ['paid','rejected','cancelled'].includes(c.status))" :key="c.id">
+          <li class="history-item">
+            <div class="h-left">
+              <div class="h-type">
+                <span x-text="c.item"></span>
+                <span style="font-weight:700;color:#38a169;margin-left:6px;">RM <span x-text="Number(c.amount).toFixed(2)"></span></span>
+              </div>
+              <div class="h-dates">
+                <span x-text="c.category_name || '—'"></span>&nbsp;·&nbsp;<span x-text="c.department"></span>
+              </div>
+              <div class="h-approver" x-show="c.approver_name">Approver: <span x-text="c.approver_name"></span></div>
+              <div class="h-reject" x-show="c.status === 'rejected' && c.rejection_reason">
+                Rejected: "<span x-text="c.rejection_reason"></span>"
+              </div>
+            </div>
+            <div class="h-right">
+              <span class="badge" :class="'badge-' + c.status" x-text="fmtClaimStatus(c.status)"></span>
+              <span style="font-size:0.72rem;color:#a0aec0;" x-text="fmtDateShort(c.created_at)"></span>
+              <button class="btn-outline" style="font-size:0.75rem;padding:4px 10px;"
+                x-show="c.status === 'pending'"
+                @click="cancelClaim(c.id)">Cancel</button>
+            </div>
+          </li>
+        </template>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ─── WFH ─── -->
+  <div x-show="tab === 'wfh'">
+    <div class="card">
+      <div class="card-title">Request Work From Home</div>
+      <div class="alert alert-info">
+        ⓘ Must be submitted <strong>at least 24 hours in advance</strong>. Maximum <strong>2 days per week</strong>. Weekends are skipped automatically.
+      </div>
+      <div class="alert alert-success" x-show="wfhSuccess" x-text="wfhSuccess"></div>
+      <div class="alert alert-error"   x-show="wfhError"   x-text="wfhError"></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="form-group" style="flex:1;min-width:140px;">
+          <label class="form-label">Start Date <span class="req">*</span></label>
+          <input type="date" x-model="wfhForm.start_date" :max="wfhForm.end_date || ''" />
+        </div>
+        <div class="form-group" style="flex:1;min-width:140px;">
+          <label class="form-label">End Date <span style="font-size:0.78rem;color:#a0aec0;">(optional)</span></label>
+          <input type="date" x-model="wfhForm.end_date" :min="wfhForm.start_date || ''" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reason <span class="req">*</span></label>
+        <textarea x-model="wfhForm.reason" placeholder="Why are you working from home?"></textarea>
+      </div>
+      <button class="btn-primary" @click="submitWFH()" :disabled="wfhLoading">
+        <span class="spin" x-show="wfhLoading"></span>
+        <span x-text="wfhLoading ? 'Submitting…' : 'Submit WFH Request'"></span>
+      </button>
+    </div>
+
+    <!-- Active WFH Requests -->
+    <div class="card" x-show="myWFH.filter(w => w.status === 'pending').length > 0">
+      <div class="card-title">Active WFH Requests</div>
+      <ul class="history-list">
+        <template x-for="w in myWFH.filter(w => w.status === 'pending')" :key="w.id">
+          <li class="history-item">
+            <div class="h-left">
+              <div class="h-type" x-text="fmtDate(w.date)"></div>
+              <div class="h-dates" x-show="w.reason" x-text="w.reason"></div>
+              <div class="h-approver" x-show="w.approver_name">Approver: <span x-text="w.approver_name"></span></div>
+            </div>
+            <div class="h-right">
+              <span class="badge" :class="'badge-' + w.status" x-text="w.status"></span>
+              <span style="font-size:0.72rem;color:#a0aec0;" x-text="fmtDateShort(w.created_at)"></span>
+              <button class="btn-outline" style="font-size:0.75rem;padding:4px 10px;"
+                @click="cancelWFH(w.id)">Cancel</button>
+            </div>
+          </li>
+        </template>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ─── CLAIMS ─── -->
+  <div x-show="tab === 'claims'">
+    <div class="card">
+      <div class="card-title">Submit Expense Claim</div>
+      <div class="alert alert-success" x-show="claimSuccess" x-text="claimSuccess"></div>
+      <div class="alert alert-error"   x-show="claimError"   x-text="claimError"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Department <span class="req">*</span></label>
+          <select x-model="claimForm.department" style="padding:11px 14px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;width:100%;outline:none;box-shadow:3px 3px 0px #e2e8f0;background:#fff;">
+            <option value="">— Select Department —</option>
+            <option value="Operation">Operation</option>
+            <option value="IT">IT</option>
+            <option value="Science">Science</option>
+            <option value="Production">Production</option>
+            <option value="Sales and Marketing">Sales and Marketing</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category <span class="req">*</span></label>
+          <select x-model="claimForm.category_id">
+            <option value="">— Select Category —</option>
+            <template x-for="c in categories" :key="c.id">
+              <option :value="c.id" x-text="c.name"></option>
+            </template>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Item Description <span class="req">*</span></label>
+          <input type="text" x-model="claimForm.item" placeholder="e.g. Taxi to client meeting" style="padding:11px 14px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;width:100%;outline:none;box-shadow:3px 3px 0px #e2e8f0;" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Amount (RM) <span class="req">*</span></label>
+          <input type="number" x-model="claimForm.amount" placeholder="0.00" min="0.01" step="0.01" style="padding:11px 14px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.9rem;width:100%;outline:none;box-shadow:3px 3px 0px #e2e8f0;" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Additional Details</label>
+        <textarea x-model="claimForm.details" placeholder="Optional — any extra info"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Receipt <span class="req">*</span></label>
+        <label class="file-label" for="receiptFile">
+          <span x-show="!claimForm.receipt_filename">📎 Click to upload receipt (image or PDF, max 5MB)</span>
+          <span class="fname" x-show="claimForm.receipt_filename">✓ <span x-text="claimForm.receipt_filename"></span></span>
+        </label>
+        <input type="file" id="receiptFile" accept="image/*,.pdf" style="display:none" @change="handleReceipt($event)" />
+      </div>
+      <button class="btn-primary" @click="submitClaim()" :disabled="claimLoading">
+        <span class="spin" x-show="claimLoading"></span>
+        <span x-text="claimLoading ? 'Submitting…' : 'Submit Claim'"></span>
+      </button>
+    </div>
+
+    <!-- Active Claims -->
+    <div class="card" x-show="myClaims.filter(c => ['pending','payment_pending'].includes(c.status)).length > 0">
+      <div class="card-title">Active Claims</div>
+      <ul class="history-list">
+        <template x-for="c in myClaims.filter(c => ['pending','payment_pending'].includes(c.status))" :key="c.id">
+          <li class="history-item">
+            <div class="h-left">
+              <div class="h-type">
+                <span x-text="c.item"></span>
+                <span style="font-weight:700;color:#38a169;margin-left:6px;">RM <span x-text="Number(c.amount).toFixed(2)"></span></span>
+              </div>
+              <div class="h-dates">
+                <span x-text="c.category_name || '—'"></span>&nbsp;·&nbsp;<span x-text="c.department"></span>
+              </div>
+              <div class="h-approver" x-show="c.approver_name">Approver: <span x-text="c.approver_name"></span></div>
+            </div>
+            <div class="h-right">
+              <span class="badge" :class="'badge-' + c.status" x-text="fmtClaimStatus(c.status)"></span>
+              <span style="font-size:0.72rem;color:#a0aec0;" x-text="fmtDateShort(c.created_at)"></span>
+              <button class="btn-outline" style="font-size:0.75rem;padding:4px 10px;"
+                x-show="c.status === 'pending'"
+                @click="cancelClaim(c.id)">Cancel</button>
+            </div>
+          </li>
+        </template>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ─── TEAM CALENDAR ─── -->
+  <div x-show="tab === 'calendar'">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div class="card-title" style="margin:0;">Team Calendar</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn-outline" style="padding:5px 14px;font-size:0.85rem;" @click="calPrev()">‹</button>
+          <span style="font-weight:700;font-size:1rem;min-width:150px;text-align:center;" x-text="calMonthLabel"></span>
+          <button class="btn-outline" style="padding:5px 14px;font-size:0.85rem;" @click="calNext()">›</button>
+        </div>
+      </div>
+
+      <!-- Day headers -->
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px;">
+        <template x-for="d in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']">
+          <div style="text-align:center;font-size:0.72rem;font-weight:700;color:#718096;padding:5px 0;" x-text="d"></div>
+        </template>
+      </div>
+
+      <!-- Calendar grid -->
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;" id="calGrid">
+        <template x-for="cell in calCells" :key="cell.key">
+          <div :style="cell.day ? `min-height:80px;background:${cell.isHoliday ? '#fef9c3' : cell.isToday ? '#eef2ff' : cell.isWeekend ? '#f8fafc' : '#fff'};border:${cell.isToday ? '2px solid #4f46e5' : cell.isHoliday ? '1.5px solid #fde68a' : '1.5px solid #e2e8f0'};border-radius:6px;padding:4px;` : 'min-height:80px;background:#f8fafc;border-radius:6px;'">
+            <div x-show="!!cell.day" :style="`font-size:0.72rem;font-weight:${cell.isToday ? 700 : 400};color:${cell.isToday ? '#4f46e5' : cell.isWeekend ? '#a0aec0' : '#718096'};margin-bottom:2px;`" x-text="cell.day"></div>
+            <div x-show="cell.isHoliday" style="font-size:0.65rem;font-weight:700;color:#92400e;background:#fde68a;border-radius:3px;padding:1px 4px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" :title="cell.holidayName" x-text="cell.holidayName"></div>
+            <template x-for="r in (cell.rows || []).slice(0,3)" :key="r.id + cell.key">
+              <div :title="`${r.employee_name} · ${calTypeLabel[r.type] || r.type} · ${r.status}`"
+                   :style="`font-size:0.68rem;font-weight:600;padding:2px 5px;border-radius:4px;margin-bottom:2px;line-height:1.3;${calTypeBadge[r.type] || 'background:#e2e8f0;color:#4a5568;'}`">
+                <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" x-text="(r.employee_name||'').split(' ')[0] + (r.department ? '-'+r.department : '')"></div>
+                <div style="font-weight:400;opacity:0.85;" x-text="calTypeLabel[r.type] || r.type"></div>
+              </div>
+            </template>
+            <div x-show="(cell.rows||[]).length > 3" style="font-size:0.65rem;color:#718096;" x-text="'+' + ((cell.rows||[]).length - 3) + ' more'"></div>
+          </div>
+        </template>
+      </div>
+
+      <!-- Legend -->
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">
+        <template x-for="[type, label] in Object.entries(calTypeLabel).filter(([t]) => t !== 'holiday')" :key="type">
+          <span :style="`font-size:0.72rem;font-weight:600;padding:2px 8px;border-radius:4px;${calTypeBadge[type] || ''}`" x-text="label"></span>
+        </template>
+        <span style="font-size:0.72rem;font-weight:600;padding:2px 8px;border-radius:4px;background:#fef9c3;color:#713f12;border:1px solid #fde68a;">Public Holiday</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── APPROVALS ─── -->
+  <div x-show="tab === 'approvals' && isApprover">
+
+    <!-- Pending approvals -->
+    <div class="card">
+      <div class="card-title">Pending Approvals</div>
+
+      <div class="empty-state" x-show="pendingApprovals.length === 0">
+        <div class="icon">✅</div>
+        <p>All caught up! No pending approvals.</p>
+      </div>
+
+      <template x-for="lv in pendingApprovals" :key="lv.id">
+        <div class="approval-card">
+          <div class="a-employee" x-text="lv.employee_name"></div>
+          <div class="a-meta">
+            <strong x-text="fmtType(lv.type)"></strong>
+            &nbsp;·&nbsp;<span x-text="fmtDate(lv.start_date)"></span>
+            <template x-if="lv.start_date !== lv.end_date">
+              <span> → <span x-text="fmtDate(lv.end_date)"></span></span>
+            </template>
+            &nbsp;·&nbsp;<span x-text="fmtDays(lv.days_count)"></span>
+            <span x-show="lv.half_day">&nbsp;(<span x-text="lv.half_day"></span> half)</span>
+            <template x-if="lv.reason">
+              <span><br/>Reason: <span x-text="lv.reason"></span></span>
+            </template>
+            <template x-if="lv.mc_attachment">
+              <span><br/><a class="mc-link" href="#" @click.prevent="openBlob(lv.mc_attachment)">View MC →</a></span>
+            </template>
+          </div>
+          <div class="a-actions">
+            <button class="btn-green" @click="approveLeave(lv.id)">Approve</button>
+            <button class="btn-red"   @click="openRejectModal(lv.id, 'leave')">Reject</button>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Pending WFH approvals -->
+    <div class="card" x-show="pendingWFHApprovals.length > 0">
+      <div class="card-title">Pending WFH Approvals</div>
+      <template x-for="w in pendingWFHApprovals" :key="w.id">
+        <div class="approval-card">
+          <div class="a-employee" x-text="w.employee_name"></div>
+          <div class="a-meta">
+            <strong>Work From Home</strong> · <span x-text="fmtDate(w.date)"></span>
+            <br/>Reason: <span x-text="w.reason"></span>
+          </div>
+          <div class="a-actions">
+            <button class="btn-green" @click="approveWFH(w.id)">Approve</button>
+            <button class="btn-red"   @click="openRejectModal(w.id, 'wfh')">Reject</button>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Processed history for this approver -->
+    <div class="card" x-show="approvalHistory.length > 0 || wfhApprovalHistory.length > 0">
+      <div class="card-title">Approval History</div>
+      <ul class="history-list">
+        <template x-for="lv in approvalHistory" :key="'l-'+lv.id">
+          <li class="history-item">
+            <div class="h-left">
+              <div class="h-type">
+                <span x-text="lv.employee_name"></span>
+                <span style="font-weight:400;color:#718096;"> · <span x-text="fmtType(lv.type)"></span></span>
+              </div>
+              <div class="h-dates">
+                <span x-text="fmtDate(lv.start_date)"></span>
+                <template x-if="lv.start_date !== lv.end_date">
+                  <span> – <span x-text="fmtDate(lv.end_date)"></span></span>
+                </template>
+                &nbsp;·&nbsp;<span x-text="fmtDays(lv.days_count)"></span>
+              </div>
+            </div>
+            <div class="h-right">
+              <span class="badge" :class="'badge-' + lv.status" x-text="lv.status"></span>
+            </div>
+          </li>
+        </template>
+        <template x-for="w in wfhApprovalHistory" :key="'w-'+w.id">
+          <li class="history-item">
+            <div class="h-left">
+              <div class="h-type">
+                <span x-text="w.employee_name"></span>
+                <span style="font-weight:400;color:#718096;"> · WFH</span>
+              </div>
+              <div class="h-dates" x-text="fmtDate(w.date)"></div>
+            </div>
+            <div class="h-right">
+              <span class="badge" :class="'badge-' + w.status" x-text="w.status"></span>
+            </div>
+          </li>
+        </template>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ─── ACCOUNT ─── -->
+  <div x-show="tab === 'account'">
+    <div class="card" style="max-width:440px;">
+      <div class="card-title">Change Password</div>
+      <div x-show="cpMsg" :style="cpMsgOk ? 'color:#276749;background:#c6f6d5;padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:0.9rem;' : 'color:#742a2a;background:#fed7d7;padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:0.9rem;'" x-text="cpMsg"></div>
+      <label style="display:block;font-size:0.85rem;font-weight:600;color:#4a5568;margin-bottom:4px;">Current Password</label>
+      <input type="password" x-model="cpCurrent" placeholder="Enter current password" style="width:100%;padding:10px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.95rem;margin-bottom:14px;" />
+      <label style="display:block;font-size:0.85rem;font-weight:600;color:#4a5568;margin-bottom:4px;">New Password</label>
+      <input type="password" x-model="cpNew" placeholder="At least 8 characters" style="width:100%;padding:10px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.95rem;margin-bottom:14px;" />
+      <label style="display:block;font-size:0.85rem;font-weight:600;color:#4a5568;margin-bottom:4px;">Confirm New Password</label>
+      <input type="password" x-model="cpConfirm" placeholder="Repeat new password" style="width:100%;padding:10px 12px;border:1.5px solid #cbd5e0;border-radius:6px;font-size:0.95rem;margin-bottom:18px;" />
+      <button @click="changePassword()" :disabled="cpLoading" style="padding:12px 28px;background:#4f46e5;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.95rem;cursor:pointer;" x-text="cpLoading ? 'Saving…' : 'Update Password'"></button>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══ Reject Modal ═══ -->
+<div class="modal-overlay" x-show="showRejectModal" @click.self="closeRejectModal()" style="display:none">
+  <div class="modal">
+    <div class="modal-title">Reject Leave Request</div>
+    <div class="modal-sub">Provide a reason — the employee will see this on their dashboard.</div>
+
+    <div class="alert alert-error" x-show="rejectError" x-text="rejectError"></div>
+
+    <div class="form-group">
+      <label class="form-label">Rejection Reason <span class="req">*</span></label>
+      <textarea x-model="rejectReason" placeholder="Enter reason…" style="min-height: 90px;"></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-outline" @click="closeRejectModal()">Cancel</button>
+      <button class="btn-red" @click="confirmReject()" :disabled="rejectLoading">
+        <span class="spin" x-show="rejectLoading"></span>
+        <span x-text="rejectLoading ? 'Rejecting…' : 'Confirm Reject'"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Cancel Approved AL Modal ═══ -->
+<div class="modal-overlay" x-show="showCancelApprovedModal" @click.self="closeCancelApprovedModal()" style="display:none">
+  <div class="modal">
+    <div class="modal-title">Cancel Approved Annual Leave</div>
+    <div class="modal-sub">Your balance will be refunded. The approver will be notified by email.</div>
+
+    <div class="alert alert-error" x-show="cancelApprovedError" x-text="cancelApprovedError"></div>
+
+    <div class="form-group">
+      <label class="form-label">Cancellation Reason <span class="req">*</span></label>
+      <textarea x-model="cancelApprovedReason" placeholder="Why are you cancelling this leave?" style="min-height: 90px;"></textarea>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-outline" @click="closeCancelApprovedModal()">Back</button>
+      <button class="btn-red" @click="confirmCancelApproved()" :disabled="cancelApprovedLoading">
+        <span class="spin" x-show="cancelApprovedLoading"></span>
+        <span x-text="cancelApprovedLoading ? 'Cancelling…' : 'Confirm Cancellation'"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Toast ═══ -->
+<div class="toast" :class="'toast-' + toast.type" x-show="toast.show" style="display:none" x-text="toast.message"></div>
+
+<script>
+(function() {
+  const _fetch = window.fetch.bind(window);
+  window.fetch = async function(url, opts) {
+    const res = await _fetch(url, opts);
+    if (res.status === 401 && !String(url).includes('/api/auth/')) {
+      localStorage.removeItem('teamly_token');
+      localStorage.removeItem('teamly_user');
+      sessionStorage.setItem('teamly_session_expired', '1');
+      window.location.href = '/';
+    }
+    return res;
+  };
+})();
+
+function dashboard() {
+  return {
+    user:          null,
+    balance:       null,
+    leaves:        [],
+    wfhList:       [],
+    claimsList:    [],
+    categories:    [],
+    blackoutDates:  [],
+    publicHolidays: [],
+    tab:           'overview',
+
+    form: { type: 'AL', start_date: '', end_date: '', half_day: '', reason: '', mc_attachment: null, mc_filename: '' },
+    formLoading: false,
+    formError:   '',
+    formSuccess: '',
+
+    clockStatus:  'OUT',
+    lastClock:    null,
+    clockRecords: [],
+    clockNote:    '',
+    clockPending: null,
+    clockLoading: false,
+    clockError:   '',
+
+    wfhForm: { start_date: '', end_date: '', reason: '' },
+    wfhLoading: false,
+    wfhError:   '',
+    wfhSuccess: '',
+
+    claimForm: { department: '', item: '', details: '', amount: '', category_id: '', receipt: null, receipt_filename: '' },
+    claimLoading: false,
+    claimError:   '',
+    claimSuccess: '',
+
+    cpCurrent: '', cpNew: '', cpConfirm: '', cpLoading: false, cpMsg: '', cpMsgOk: false,
+
+    showRejectModal: false,
+    rejectTargetId:  null,
+    rejectTargetType: 'leave',
+    rejectReason:    '',
+    rejectLoading:   false,
+    rejectError:     '',
+
+    showCancelApprovedModal: false,
+    cancelApprovedTargetId:  null,
+    cancelApprovedReason:    '',
+    cancelApprovedLoading:   false,
+    cancelApprovedError:     '',
+
+    toast: { show: false, message: '', type: 'success' },
+
+    // ── Calendar ──────────────────────────────────────────────────────────────
+    calYear:      new Date().getFullYear(),
+    calMonth:     new Date().getMonth(),
+    calCells:     [],
+    calMonthLabel: '',
+    calTypeBadge: {
+      AL:        'background:#c6f6d5;color:#22543d;',
+      sick:      'background:#fef3c7;color:#92400e;',
+      emergency: 'background:#fed7d7;color:#742a2a;',
+      comp_off:  'background:#e9d8fd;color:#553c9a;',
+      UPL:       'background:#e2e8f0;color:#4a5568;',
+      wfh:       'background:#bee3f8;color:#2a4365;'
+    },
+    calTypeLabel: { AL:'AL', sick:'Sick', emergency:'Emergency', comp_off:'Comp Off', UPL:'UPL', wfh:'WFH' },
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    async init() {
+      const token = localStorage.getItem('teamly_token');
+      if (!token) { window.location.href = '/'; return; }
+
+      const stored = localStorage.getItem('teamly_user');
+      this.user = stored ? JSON.parse(stored) : {};
+
+      if (this.user.role === 'superadmin') { window.location.href = '/admin.html'; return; }
+
+      await Promise.all([
+        this.loadBalance(), this.loadLeaves(), this.loadBlackout(), this.loadHolidays(),
+        this.loadWFH(), this.loadClaims(), this.loadCategories(),
+        this.loadClockStatus(), this.loadClockRecords()
+      ]);
+      this.claimForm.department = this.user?.department || '';
+
+      // Auto-refresh statuses every 30 seconds
+      setInterval(() => this.refreshStatuses(), 30000);
+    },
+
+    // ── API helper ────────────────────────────────────────────────────────────
+    api(method, url, body) {
+      const token = localStorage.getItem('teamly_token');
+      const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` } };
+      if (body !== undefined) opts.body = JSON.stringify(body);
+      return fetch(url, opts);
+    },
+
+    // ── Data loaders ──────────────────────────────────────────────────────────
+    async loadBalance() {
+      try {
+        const res = await this.api('GET', '/api/leave/balance');
+        if (res.status === 401) { localStorage.removeItem('teamly_token'); localStorage.removeItem('teamly_user'); window.location.href = '/'; return; }
+        if (res.ok) this.balance = await res.json();
+      } catch (e) { console.error(e); }
+    },
+
+    async loadLeaves() {
+      try {
+        const res = await this.api('GET', '/api/leave');
+        if (res.ok) this.leaves = await res.json();
+      } catch (e) { console.error(e); }
+    },
+
+    async loadBlackout() {
+      try {
+        const res = await fetch('/api/blackout');
+        if (res.ok) this.blackoutDates = await res.json();
+      } catch (e) { console.error(e); }
+    },
+
+    async loadHolidays() {
+      try {
+        const res = await fetch('/api/holidays');
+        if (res.ok) this.publicHolidays = await res.json();
+      } catch (e) { console.error(e); }
+    },
+
+    async loadWFH() {
+      try {
+        const res = await this.api('GET', '/api/wfh');
+        if (res.ok) this.wfhList = await res.json();
+      } catch (e) { console.error(e); }
+    },
+
+    async loadClaims() {
+      try {
+        const res = await this.api('GET', '/api/claims');
+        if (res.ok) this.claimsList = await res.json();
+      } catch (e) { console.error(e); }
+    },
+
+    async loadCategories() {
+      try {
+        const res = await this.api('GET', '/api/claim-categories');
+        if (res.ok) this.categories = await res.json();
+      } catch (e) { console.error(e); }
+    },
+
+    async loadClockStatus() {
+      try {
+        const res = await this.api('GET', '/api/clock/status');
+        if (res.ok) {
+          const data = await res.json();
+          this.clockStatus = data.status;
+          this.lastClock   = data.last;
+        }
+      } catch (e) { console.error(e); }
+    },
+
+    async loadClockRecords() {
+      try {
+        const res = await this.api('GET', '/api/clock/records');
+        if (res.ok) this.clockRecords = await res.json();
+      } catch (e) { console.error(e); }
+    },
+
+    async refreshStatuses() {
+      await Promise.all([
+        this.loadBalance(), this.loadLeaves(),
+        this.loadWFH(), this.loadClaims(),
+        this.loadClockStatus()
+      ]);
+    },
+
+    async doClock(action) {
+      this.clockError  = '';
+      this.clockPending = action;
+      this.clockLoading = true;
+
+      let lat, lng;
+      try {
+        const pos = await new Promise((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 })
+        );
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } catch {
+        // GPS unavailable or denied — proceed without coordinates
+        lat = null;
+        lng = null;
+      }
+
+      try {
+        const res  = await this.api('POST', '/api/clock', {
+          action,
+          latitude:  lat,
+          longitude: lng,
+          note:      this.clockNote.trim() || null
+        });
+        const data = await res.json();
+        if (!res.ok) { this.clockError = data.error || 'Failed to clock.'; return; }
+        this.clockStatus = action;
+        this.lastClock   = { action, timestamp: data.record.timestamp, timestamp_display: data.record.timestamp_display };
+        this.clockNote   = '';
+        await this.loadClockRecords();
+        this.showToast(`Clocked ${action} at ${data.record.timestamp_display}`, 'success');
+      } catch {
+        this.clockError = 'Network error. Please try again.';
+      } finally {
+        this.clockLoading = false;
+        this.clockPending = null;
+      }
+    },
+
+    // ── Computed ──────────────────────────────────────────────────────────────
+    get groupedBlackoutDates() {
+      if (!this.blackoutDates.length) return [];
+      const sorted = [...this.blackoutDates].sort((a, b) => a.date.localeCompare(b.date));
+      const groups = [];
+      let cur = { start: sorted[0].date, end: sorted[0].date, reason: sorted[0].reason };
+      for (let i = 1; i < sorted.length; i++) {
+        const prevMs = new Date(cur.end + 'T00:00:00').getTime();
+        const currMs = new Date(sorted[i].date + 'T00:00:00').getTime();
+        if (currMs - prevMs === 86400000 && sorted[i].reason === cur.reason) {
+          cur.end = sorted[i].date;
+        } else {
+          groups.push({ ...cur });
+          cur = { start: sorted[i].date, end: sorted[i].date, reason: sorted[i].reason };
+        }
+      }
+      groups.push({ ...cur });
+      return groups;
+    },
+
+    get leavePreview() {
+      const { start_date, end_date, half_day } = this.form;
+      if (half_day) return { days: 0.5, skipped: [], weekendDays: 0 };
+      if (!start_date || !end_date || end_date < start_date) return null;
+      const holidaySet = new Set(this.myHolidays.map(h => h.date));
+      const holidayNames = {};
+      this.myHolidays.forEach(h => { holidayNames[h.date] = h.name; });
+      let days = 0, weekendDays = 0;
+      const skipped = [];
+      const cur = new Date(start_date + 'T00:00:00');
+      const last = new Date(end_date   + 'T00:00:00');
+      while (cur <= last) {
+        const dow = cur.getDay();
+        const ds  = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
+        if (dow === 0 || dow === 6) weekendDays++;
+        else if (holidaySet.has(ds)) skipped.push(holidayNames[ds] || ds);
+        else days++;
+        cur.setDate(cur.getDate() + 1);
+      }
+      return { days, skipped, weekendDays };
+    },
+
+    get myRegion() {
+      const map = { 'Europe/London': 'UK', 'Europe/Dublin': 'UK', 'Europe/Belfast': 'UK' };
+      return map[this.user?.timezone] || 'MY';
+    },
+
+    get myHolidays() {
+      return this.publicHolidays.filter(h => (h.region || 'MY') === this.myRegion);
+    },
+
+    get myLeaves() {
+      return this.leaves.filter(l => l.user_id === this.user?.id);
+    },
+
+    get myWFH() {
+      return this.wfhList.filter(w => w.user_id === this.user?.id);
+    },
+
+    get myClaims() {
+      return this.claimsList.filter(c => c.user_id === this.user?.id);
+    },
+
+    get pendingApprovals() {
+      return this.leaves.filter(l => l.approver_id === this.user?.id && l.status === 'pending');
+    },
+
+    get approvalHistory() {
+      return this.leaves.filter(l => l.approver_id === this.user?.id && l.status !== 'pending');
+    },
+
+    get pendingWFHApprovals() {
+      return this.wfhList.filter(w => w.approver_id === this.user?.id && w.status === 'pending');
+    },
+
+    get wfhApprovalHistory() {
+      return this.wfhList.filter(w => w.approver_id === this.user?.id && w.status !== 'pending');
+    },
+
+    get pendingClaimApprovals() {
+      return this.claimsList.filter(c => c.approver_id === this.user?.id && c.status === 'pending');
+    },
+
+    get claimApprovalHistory() {
+      return this.claimsList.filter(c => c.approver_id === this.user?.id && c.status !== 'pending');
+    },
+
+    get isApprover() {
+      return ['hod', 'approver_a', 'superadmin'].includes(this.user?.role);
+    },
+
+    get pendingCount() {
+      return this.pendingApprovals.length + this.pendingWFHApprovals.length;
+    },
+
+    get requiresReason() { return ['emergency', 'comp_off'].includes(this.form.type); },
+
+    get requiresMC() { return this.form.type === 'sick'; },
+
+    get roleLabel() {
+      return { user: 'Staff', hod: 'HOD', approver_a: 'Approver', superadmin: 'Admin' }[this.user?.role] || '';
+    },
+
+    // ── Form handlers ─────────────────────────────────────────────────────────
+    onTypeChange() {
+      this.form.reason = '';
+      this.form.mc_attachment = null;
+      this.form.mc_filename   = '';
+      this.formError   = '';
+      this.formSuccess = '';
+    },
+
+    onHalfDayChange() {
+      if (this.form.half_day) this.form.end_date = this.form.start_date;
+    },
+
+    onStartDateChange() {
+      if (this.form.half_day) this.form.end_date = this.form.start_date;
+    },
+
+    handleFile(event) {
+      const file = event.target.files[0];
+      if (!file) { this.form.mc_attachment = null; this.form.mc_filename = ''; return; }
+      if (file.size > 5 * 1024 * 1024) {
+        this.formError = 'File too large. Maximum 5MB.';
+        event.target.value = '';
+        return;
+      }
+      this.form.mc_filename = file.name;
+      const reader = new FileReader();
+      reader.onload = e => { this.form.mc_attachment = e.target.result; };
+      reader.readAsDataURL(file);
+    },
+
+    async submitLeave() {
+      this.formError = '';
+      this.formSuccess = '';
+
+      if (!this.form.start_date) { this.formError = 'Please select a start date.'; return; }
+      if (!this.form.end_date)   { this.formError = 'Please select an end date.';   return; }
+      if (this.requiresMC && !this.form.mc_attachment) {
+        this.formError = 'MC attachment is required for sick leave.'; return;
+      }
+      if (this.requiresReason && !this.form.reason?.trim()) {
+        this.formError = `Reason is required for ${this.fmtType(this.form.type)}.`; return;
+      }
+
+      this.formLoading = true;
+      try {
+        const res  = await this.api('POST', '/api/leave', {
+          type:          this.form.type,
+          start_date:    this.form.start_date,
+          end_date:      this.form.end_date,
+          half_day:      this.form.half_day || null,
+          reason:        this.form.reason?.trim() || null,
+          mc_attachment: this.form.mc_attachment || null
+        });
+        const data = await res.json();
+
+        if (!res.ok) { this.formError = data.error || 'Failed to submit.'; return; }
+
+        this.formSuccess = 'Leave request submitted!';
+        this.resetForm();
+        await Promise.all([this.loadBalance(), this.loadLeaves()]);
+        setTimeout(() => { this.formSuccess = ''; }, 3000);
+      } catch (e) {
+        this.formError = 'Network error. Please try again.';
+      } finally {
+        this.formLoading = false;
+      }
+    },
+
+    resetForm() {
+      this.form = { type: 'AL', start_date: '', end_date: '', half_day: '', reason: '', mc_attachment: null, mc_filename: '' };
+      const fi = document.getElementById('mcFile');
+      if (fi) fi.value = '';
+    },
+
+    // ── Approval actions ──────────────────────────────────────────────────────
+    async approveLeave(id) {
+      try {
+        const res  = await this.api('PUT', `/api/leave/${id}/approve`);
+        const data = await res.json();
+        if (!res.ok) { this.showToast(data.error || 'Failed to approve.', 'error'); return; }
+        await Promise.all([this.loadBalance(), this.loadLeaves()]);
+        this.showToast('Leave approved.', 'success');
+      } catch (e) {
+        this.showToast('Network error.', 'error');
+      }
+    },
+
+    openRejectModal(id, type = 'leave') {
+      this.rejectTargetId   = id;
+      this.rejectTargetType = type;
+      this.rejectReason     = '';
+      this.rejectError      = '';
+      this.showRejectModal  = true;
+    },
+
+    closeRejectModal() {
+      this.showRejectModal = false;
+      this.rejectTargetId  = null;
+    },
+
+    async confirmReject() {
+      if (!this.rejectReason.trim()) { this.rejectError = 'Please enter a rejection reason.'; return; }
+      this.rejectLoading = true;
+      this.rejectError   = '';
+      const urlMap = { leave: 'leave', wfh: 'wfh', claim: 'claims' };
+      const url    = `/api/${urlMap[this.rejectTargetType]}/${this.rejectTargetId}/reject`;
+      try {
+        const res  = await this.api('PUT', url, { rejection_reason: this.rejectReason.trim() });
+        const data = await res.json();
+        if (!res.ok) { this.rejectError = data.error || 'Failed to reject.'; return; }
+        this.closeRejectModal();
+        if (this.rejectTargetType === 'leave')  await this.loadLeaves();
+        if (this.rejectTargetType === 'wfh')    await this.loadWFH();
+        if (this.rejectTargetType === 'claim')  await this.loadClaims();
+        this.showToast('Request rejected.', 'success');
+      } catch (e) {
+        this.rejectError = 'Network error.';
+      } finally {
+        this.rejectLoading = false;
+      }
+    },
+
+    // ── WFH actions ───────────────────────────────────────────────────────────
+    async submitWFH() {
+      this.wfhError = '';
+      this.wfhSuccess = '';
+      if (!this.wfhForm.start_date)     { this.wfhError = 'Please select a start date.'; return; }
+      if (!this.wfhForm.reason?.trim()) { this.wfhError = 'Please enter a reason.'; return; }
+      this.wfhLoading = true;
+      try {
+        const body = { start_date: this.wfhForm.start_date, reason: this.wfhForm.reason.trim() };
+        if (this.wfhForm.end_date) body.end_date = this.wfhForm.end_date;
+        const res  = await this.api('POST', '/api/wfh', body);
+        const data = await res.json();
+        if (!res.ok) { this.wfhError = data.error || 'Failed to submit.'; return; }
+        const count = Array.isArray(data) ? data.length : 1;
+        this.wfhSuccess = count === 1 ? 'WFH request submitted!' : `${count} WFH requests submitted!`;
+        this.wfhForm = { start_date: '', end_date: '', reason: '' };
+        await this.loadWFH();
+        setTimeout(() => this.wfhSuccess = '', 3000);
+      } catch (e) {
+        this.wfhError = 'Network error. Please try again.';
+      } finally {
+        this.wfhLoading = false;
+      }
+    },
+
+    async approveWFH(id) {
+      try {
+        const res  = await this.api('PUT', `/api/wfh/${id}/approve`);
+        const data = await res.json();
+        if (!res.ok) { this.showToast(data.error || 'Failed to approve.', 'error'); return; }
+        await this.loadWFH();
+        this.showToast('WFH approved.', 'success');
+      } catch (e) { this.showToast('Network error.', 'error'); }
+    },
+
+    async cancelWFH(id) {
+      if (!confirm('Cancel this WFH request?')) return;
+      try {
+        const res = await this.api('PUT', `/api/wfh/${id}/cancel`);
+        if (!res.ok) { const d = await res.json(); this.showToast(d.error || 'Failed to cancel.', 'error'); return; }
+        await this.loadWFH();
+        this.showToast('WFH cancelled.', 'success');
+      } catch (e) { this.showToast('Network error.', 'error'); }
+    },
+
+    // ── Claims actions ────────────────────────────────────────────────────────
+    handleReceipt(event) {
+      const file = event.target.files[0];
+      if (!file) { this.claimForm.receipt = null; this.claimForm.receipt_filename = ''; return; }
+      if (file.size > 5 * 1024 * 1024) {
+        this.claimError = 'File too large. Maximum 5MB.';
+        event.target.value = '';
+        return;
+      }
+      this.claimForm.receipt_filename = file.name;
+      const reader = new FileReader();
+      reader.onload = e => { this.claimForm.receipt = e.target.result; };
+      reader.readAsDataURL(file);
+    },
+
+    async submitClaim() {
+      this.claimError = '';
+      this.claimSuccess = '';
+      if (!this.claimForm.department) { this.claimError = 'Department is required.'; return; }
+      if (!this.claimForm.item?.trim())        { this.claimError = 'Item description is required.'; return; }
+      if (!this.claimForm.category_id)         { this.claimError = 'Please select a category.'; return; }
+      const amt = Number(this.claimForm.amount);
+      if (!this.claimForm.amount || isNaN(amt) || amt <= 0) { this.claimError = 'Please enter a valid amount.'; return; }
+      if (!this.claimForm.receipt) { this.claimError = 'Receipt is required.'; return; }
+      this.claimLoading = true;
+      try {
+        const res  = await this.api('POST', '/api/claims', {
+          department:  this.claimForm.department,
+          item:        this.claimForm.item.trim(),
+          details:     this.claimForm.details?.trim() || null,
+          amount:      amt,
+          category_id: this.claimForm.category_id,
+          receipt:     this.claimForm.receipt
+        });
+        const data = await res.json();
+        if (!res.ok) { this.claimError = data.error || 'Failed to submit.'; return; }
+        this.claimSuccess = `Claim submitted! Ref: ${data.ref_no}`;
+        this.claimForm = { department: this.user?.department || '', item: '', details: '', amount: '', category_id: '', receipt: null, receipt_filename: '' };
+        const rf = document.getElementById('receiptFile');
+        if (rf) rf.value = '';
+        await this.loadClaims();
+        setTimeout(() => this.claimSuccess = '', 4000);
+      } catch (e) {
+        this.claimError = 'Network error. Please try again.';
+      } finally {
+        this.claimLoading = false;
+      }
+    },
+
+    async approveClaim(id) {
+      try {
+        const res  = await this.api('PUT', `/api/claims/${id}/approve`);
+        const data = await res.json();
+        if (!res.ok) { this.showToast(data.error || 'Failed to approve.', 'error'); return; }
+        await this.loadClaims();
+        this.showToast('Claim approved.', 'success');
+      } catch (e) { this.showToast('Network error.', 'error'); }
+    },
+
+    async cancelClaim(id) {
+      if (!confirm('Cancel this claim?')) return;
+      try {
+        const res = await this.api('PUT', `/api/claims/${id}/cancel`);
+        if (!res.ok) { const d = await res.json(); this.showToast(d.error || 'Failed to cancel.', 'error'); return; }
+        await this.loadClaims();
+        this.showToast('Claim cancelled.', 'success');
+      } catch (e) { this.showToast('Network error.', 'error'); }
+    },
+
+    async cancelLeave(id) {
+      if (!confirm('Cancel this leave request?')) return;
+      try {
+        const res = await this.api('PUT', `/api/leave/${id}/cancel`);
+        if (!res.ok) { const d = await res.json(); this.showToast(d.error || 'Failed to cancel.', 'error'); return; }
+        await Promise.all([this.loadBalance(), this.loadLeaves()]);
+        this.showToast('Leave cancelled.', 'success');
+      } catch (e) { this.showToast('Network error.', 'error'); }
+    },
+
+    canCancelApproved(startDate) {
+      if (!startDate) return false;
+      const todayMs = new Date(new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }) + 'T00:00:00').getTime();
+      const startMs = new Date(startDate + 'T00:00:00').getTime();
+      return (startMs - todayMs) >= 3 * 24 * 60 * 60 * 1000;
+    },
+
+    openCancelApprovedModal(id) {
+      this.cancelApprovedTargetId = id;
+      this.cancelApprovedReason   = '';
+      this.cancelApprovedError    = '';
+      this.showCancelApprovedModal = true;
+    },
+
+    closeCancelApprovedModal() {
+      this.showCancelApprovedModal = false;
+      this.cancelApprovedTargetId  = null;
+    },
+
+    async confirmCancelApproved() {
+      if (!this.cancelApprovedReason.trim()) {
+        this.cancelApprovedError = 'Please enter a cancellation reason.'; return;
+      }
+      this.cancelApprovedLoading = true;
+      this.cancelApprovedError   = '';
+      try {
+        const res  = await this.api('PUT', `/api/leave/${this.cancelApprovedTargetId}/cancel-approved`, { reason: this.cancelApprovedReason.trim() });
+        const data = await res.json();
+        if (!res.ok) { this.cancelApprovedError = data.error || 'Failed to cancel.'; return; }
+        this.closeCancelApprovedModal();
+        await Promise.all([this.loadBalance(), this.loadLeaves()]);
+        this.showToast('Annual Leave cancelled and balance refunded.', 'success');
+      } catch (e) {
+        this.cancelApprovedError = 'Network error.';
+      } finally {
+        this.cancelApprovedLoading = false;
+      }
+    },
+
+    // ── Team Calendar ─────────────────────────────────────────────────────────
+    async loadCalendar() {
+      const monthStr = `${this.calYear}-${String(this.calMonth + 1).padStart(2, '0')}`;
+      const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      this.calMonthLabel = `${MONTH_NAMES[this.calMonth]} ${this.calYear}`;
+      try {
+        const res  = await this.api('GET', `/api/calendar?month=${monthStr}`);
+        const data = await res.json();
+
+        // Build day map
+        const dayMap = {};
+        data.forEach(row => {
+          const from = new Date(row.date_from + 'T00:00:00');
+          const to   = new Date(row.date_to   + 'T00:00:00');
+          for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+            const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            if (!dayMap[key]) dayMap[key] = [];
+            dayMap[key].push(row);
+          }
+        });
+
+        const todayStr  = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kuala_Lumpur' });
+        const firstDay  = new Date(this.calYear, this.calMonth, 1);
+        const lastDay   = new Date(this.calYear, this.calMonth + 1, 0);
+        let startDow    = firstDay.getDay();
+        startDow        = startDow === 0 ? 6 : startDow - 1;
+
+        const cells = [];
+        for (let i = 0; i < startDow; i++) cells.push({ key: `pad-${i}`, day: null });
+        for (let d = 1; d <= lastDay.getDate(); d++) {
+          const dateStr   = `${this.calYear}-${String(this.calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+          const dow       = new Date(dateStr + 'T00:00:00').getDay();
+          const cellRows  = dayMap[dateStr] || [];
+          const holiday   = cellRows.find(r => r.type === 'holiday');
+          cells.push({
+            key:         dateStr,
+            day:         d,
+            dateStr,
+            isToday:     dateStr === todayStr,
+            isWeekend:   dow === 0 || dow === 6,
+            isHoliday:   !!holiday,
+            holidayName: holiday ? holiday.employee_name : null,
+            rows:        cellRows.filter(r => r.type !== 'holiday')
+          });
+        }
+        this.calCells = cells;
+      } catch {
+        this.calCells = [];
+      }
+    },
+
+    calPrev() {
+      this.calMonth--;
+      if (this.calMonth < 0) { this.calMonth = 11; this.calYear--; }
+      this.loadCalendar();
+    },
+
+    calNext() {
+      this.calMonth++;
+      if (this.calMonth > 11) { this.calMonth = 0; this.calYear++; }
+      this.loadCalendar();
+    },
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    showToast(message, type = 'success') {
+      this.toast = { show: true, message, type };
+      setTimeout(() => { this.toast.show = false; }, 3000);
+    },
+
+    async changePassword() {
+      this.cpMsg = '';
+      if (!this.cpCurrent) { this.cpMsg = 'Enter your current password.'; this.cpMsgOk = false; return; }
+      if (this.cpNew.length < 8) { this.cpMsg = 'New password must be at least 8 characters.'; this.cpMsgOk = false; return; }
+      if (this.cpNew !== this.cpConfirm) { this.cpMsg = 'New passwords do not match.'; this.cpMsgOk = false; return; }
+      this.cpLoading = true;
+      try {
+        const res  = await this.api('PUT', '/api/auth/change-password', { current_password: this.cpCurrent, new_password: this.cpNew });
+        const data = await res.json();
+        if (!res.ok) { this.cpMsg = data.error || 'Failed to update password.'; this.cpMsgOk = false; return; }
+        this.cpMsg = 'Password updated successfully.'; this.cpMsgOk = true;
+        this.cpCurrent = ''; this.cpNew = ''; this.cpConfirm = '';
+      } catch { this.cpMsg = 'Network error.'; this.cpMsgOk = false; }
+      finally { this.cpLoading = false; }
+    },
+
+    logout() {
+      localStorage.removeItem('teamly_token');
+      localStorage.removeItem('teamly_user');
+      window.location.href = '/';
+    },
+
+    fmtDate(d) {
+      if (!d) return '—';
+      const s = d.includes('T') ? d.split('T')[0] : d;
+      return new Date(s + 'T00:00:00').toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' });
+    },
+
+    fmtDateShort(d) {
+      if (!d) return '';
+      const s = d.includes('T') ? d.split('T')[0] : d;
+      return new Date(s + 'T00:00:00').toLocaleDateString('en-MY', { day: 'numeric', month: 'short' });
+    },
+
+    fmtDays(n) {
+      if (n === 0.5) return '½ day';
+      return `${n} day${n !== 1 ? 's' : ''}`;
+    },
+
+    openBlob(dataUri) {
+      const [meta, b64] = dataUri.split(',');
+      const mime = meta.match(/:(.*?);/)[1];
+      const bytes = atob(b64);
+      const arr = new Uint8Array(bytes.length);
+      for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+      const url = URL.createObjectURL(new Blob([arr], { type: mime }));
+      window.open(url, '_blank');
+    },
+
+    fmtType(t) {
+      return { AL: 'Annual Leave', sick: 'Sick Leave', emergency: 'Emergency Leave', comp_off: 'Comp Off', UPL: 'Unpaid Leave' }[t] || t;
+    },
+
+    fmtClaimStatus(s) {
+      return { pending: 'Pending', payment_pending: 'Payment Pending', paid: 'Paid', rejected: 'Rejected', cancelled: 'Cancelled' }[s] || s;
+    },
+
+    fmtDateTime(d) {
+      if (!d) return '—';
+      return new Date(d).toLocaleString('en-MY', {
+        timeZone: 'Asia/Kuala_Lumpur',
+        day: 'numeric', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+  };
+}
+</script>
+</body>
+</html>
+

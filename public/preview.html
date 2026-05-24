@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teamly — Live Demo</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #008181;
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #fff; border-radius: 16px; padding: 40px 36px;
+      width: 100%; max-width: 560px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    }
+    .demo-pill {
+      display: inline-block; background: #fef3c7; color: #92400e;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; padding: 4px 12px; border-radius: 999px;
+      margin-bottom: 16px;
+    }
+    h1 { font-family: 'Outfit', sans-serif; font-size: 2rem; color: #4f46e5; font-weight: 900; letter-spacing: 3px; }
+    .sub { color: #64748b; font-size: 0.92rem; margin: 6px 0 24px; line-height: 1.5; }
+    .sub strong { color: #334155; }
+    .section-label { font-size: 0.74rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #94a3b8; margin: 0 0 10px; }
+    .roles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+    .role-btn {
+      display: flex; flex-direction: column; gap: 2px; text-align: left;
+      padding: 14px 16px; border-radius: 10px; border: 1.5px solid #e2e8f0;
+      background: #f8fafc; cursor: pointer; transition: border-color .15s, box-shadow .15s, background .15s;
+      font-family: 'Open Sans', sans-serif;
+    }
+    .role-btn:hover { border-color: #4f46e5; background: #eef2ff; box-shadow: 0 2px 8px rgba(79,70,229,0.12); }
+    .role-btn.primary { border-color: #4f46e5; background: #eef2ff; }
+    .role-btn .r-name { font-size: 0.98rem; font-weight: 700; color: #1e293b; }
+    .role-btn .r-desc { font-size: 0.78rem; color: #64748b; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #edf2f7; }
+    th { color: #94a3b8; font-weight: 600; font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    td code { background: #f1f5f9; padding: 2px 7px; border-radius: 5px; font-size: 0.82rem; color: #334155; }
+    .note { font-size: 0.78rem; color: #94a3b8; margin-top: 18px; line-height: 1.5; }
+    .note a { color: #4f46e5; text-decoration: none; }
+    .err { display: none; background: #fee2e2; color: #991b1b; padding: 10px 14px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 16px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="demo-pill">● Live Demo</span>
+    <h1>TEAMLY</h1>
+    <p class="sub">
+      A self-hosted HR portal — clock-in, leave, WFH, expense claims, email-style approvals, and an admin console.
+      This is a <strong>sandbox</strong> running on an isolated database with sample data; it resets periodically and never touches real records.
+      Pick a role to jump straight in.
+    </p>
+
+    <div class="err" id="err"></div>
+
+    <p class="section-label">Enter as</p>
+    <div class="roles">
+      <button class="role-btn primary" onclick="enter('jordan')">
+        <span class="r-name">Employee</span>
+        <span class="r-desc">Jordan — submit leave, WFH, claims, clock in/out</span>
+      </button>
+      <button class="role-btn" onclick="enter('alex')">
+        <span class="r-name">HOD</span>
+        <span class="r-desc">Alex — approve sick / emergency / WFH</span>
+      </button>
+      <button class="role-btn" onclick="enter('maya')">
+        <span class="r-name">Approver</span>
+        <span class="r-desc">Maya — approve annual leave & claims</span>
+      </button>
+      <button class="role-btn" onclick="enter('admin')">
+        <span class="r-name">Admin</span>
+        <span class="r-desc">Full console — users, balances, reports</span>
+      </button>
+    </div>
+
+    <p class="section-label">Or sign in manually</p>
+    <table>
+      <thead><tr><th>Role</th><th>Username</th><th>Password</th></tr></thead>
+      <tbody>
+        <tr><td>Admin</td><td><code>admin</code></td><td><code>demo1234</code></td></tr>
+        <tr><td>HOD</td><td><code>alex</code></td><td><code>demo1234</code></td></tr>
+        <tr><td>Approver</td><td><code>maya</code></td><td><code>demo1234</code></td></tr>
+        <tr><td>Employee</td><td><code>jordan</code></td><td><code>demo1234</code></td></tr>
+      </tbody>
+    </table>
+
+    <p class="note">
+      Every seeded account uses the password <code>demo1234</code>.
+      Go to the <a href="/login.html">standard login</a> any time.
+    </p>
+  </div>
+
+  <script>
+    async function enter(username) {
+      hideErr();
+      try {
+        const res  = await fetch('/api/auth/login', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ username, password: 'demo1234' })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.token) {
+          showErr(data.error || 'Demo login failed. The demo may still be starting up — try again in a moment.');
+          return;
+        }
+        localStorage.setItem('teamly_token', data.token);
+        localStorage.setItem('teamly_user',  JSON.stringify(data.user));
+        window.location.href = data.user.role === 'superadmin' ? '/admin.html' : '/dashboard.html';
+      } catch {
+        showErr('Network error. Please try again.');
+      }
+    }
+    function showErr(m) { const e = document.getElementById('err'); e.textContent = m; e.style.display = 'block'; }
+    function hideErr() { document.getElementById('err').style.display = 'none'; }
+  </script>
+</body>
+</html>
