@@ -11,6 +11,7 @@ const { Resend } = require('resend');
 const rateLimit  = require('express-rate-limit');
 
 const app     = express();
+app.set('trust proxy', 1);
 const PORT    = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'teamly-dev-secret-change-in-production';
 const APP_URL    = process.env.APP_URL    || `http://localhost:${PORT}`;
