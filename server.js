@@ -702,6 +702,20 @@ const loginLimiter = rateLimit({
   message: { error: 'Too many login attempts. Please try again in 15 minutes.' }
 });
 
+app.post('/api/auth/probe', loginLimiter, async (req, res) => {
+  const { username } = req.body;
+  if (!username) return res.status(400).json({ error: 'Username required' });
+  try {
+    const result = await db.execute({ sql: 'SELECT id, name, force_password_reset FROM users WHERE username = ?', args: [username.trim()] });
+    const user = result.rows[0];
+    if (!user || !user.force_password_reset) return res.json({ first_time: false });
+    return res.json({ first_time: true, user_id: user.id, name: user.name });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 app.post('/api/auth/login', loginLimiter, async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {

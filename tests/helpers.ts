@@ -74,20 +74,20 @@ export function addDays(iso: string, n: number): string {
 export async function loginExisting(page: Page, username: string, password: string) {
   await page.goto('/login.html');
   await page.locator('#usernameInput').fill(username);
+  await page.locator('#btnContinue').click();
   await page.locator('#password').fill(password);
   await page.locator('#btnLogin').click();
 }
 
 /**
- * Log in a seeded employee for the first time: enter username, then create a
- * password on the set-password view. Leaves the page on whatever the role
- * redirects to (dashboard for users, console picker for hod/approver_a).
+ * Log in a seeded employee for the first time: enter username → Continue →
+ * server detects force_password_reset → set-password view appears automatically.
+ * Leaves the page on whatever the role redirects to.
  */
 export async function loginFirstTime(page: Page, username: string, password = EMP_PASSWORD) {
   await page.goto('/login.html');
   await page.locator('#usernameInput').fill(username);
-  await page.locator('#password').fill('ignored-first-time');
-  await page.locator('#btnLogin').click();
+  await page.locator('#btnContinue').click();
 
   await expect(page.locator('#view-setpass')).toBeVisible();
   await page.locator('#newPass').fill(password);

@@ -6,13 +6,13 @@ test.use({ storageState: { cookies: [], origins: [] } });
 
 test('rejects an invalid password', async ({ page }) => {
   await loginExisting(page, ADMIN.username, 'definitely-wrong');
-  await expect(page.locator('#errorMsg')).toBeVisible();
-  await expect(page.locator('#errorMsg')).toContainText('Invalid credentials');
+  await expect(page.locator('#passError')).toBeVisible();
+  await expect(page.locator('#passError')).toContainText('Invalid credentials');
 });
 
 test('validates that a username is entered', async ({ page }) => {
   await page.goto('/login.html');
-  await page.locator('#btnLogin').click();
+  await page.locator('#btnContinue').click();
   await expect(page.locator('#errorMsg')).toContainText('enter your username');
 });
 
@@ -28,8 +28,7 @@ test('first-time view validates the new password', async ({ page }) => {
   // "dana" is left in first-time state — we never submit a valid password here.
   await page.goto('/login.html');
   await page.locator('#usernameInput').fill('dana');
-  await page.locator('#password').fill('ignored');
-  await page.locator('#btnLogin').click();
+  await page.locator('#btnContinue').click();
 
   await expect(page.locator('#view-setpass')).toBeVisible();
 

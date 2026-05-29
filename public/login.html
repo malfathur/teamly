@@ -168,8 +168,24 @@
       color: #cbd5e0;
     }
 
-    #view-setpass  { display: none; }
-    #view-choose   { display: none; }
+    #view-setpass    { display: none; }
+    #view-choose     { display: none; }
+    #step-password   { display: none; }
+
+    .username-display {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f1f5f9;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 18px;
+      font-family: 'Open Sans', sans-serif;
+    }
+    .username-display .ud-name { font-weight: 600; color: #1e293b; font-size: 0.95rem; }
+    .username-display .ud-change { font-size: 0.8rem; color: #4f46e5; cursor: pointer; }
+    .username-display .ud-change:hover { text-decoration: underline; }
 
     .choose-title {
       font-family: 'Open Sans', sans-serif;
@@ -210,16 +226,27 @@
 
   <!-- ── View 1: Normal sign-in ── -->
   <div id="view-login">
-    <label for="usernameInput">Username</label>
-    <input type="text" id="usernameInput" placeholder="Enter your username" autocomplete="username" />
+    <!-- Step 1: Username -->
+    <div id="step-username">
+      <label for="usernameInput">Username</label>
+      <input type="text" id="usernameInput" placeholder="Enter your username" autocomplete="username" />
+      <button class="btn-login" id="btnContinue">Continue</button>
+      <div class="error-msg"  id="errorMsg"></div>
+      <div class="loading-msg" id="loadingMsg">Checking...</div>
+    </div>
 
-    <label for="password">Password</label>
-    <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" />
-
-    <button class="btn-login" id="btnLogin">Sign In</button>
-
-    <div class="error-msg"  id="errorMsg"></div>
-    <div class="loading-msg" id="loadingMsg">Signing in...</div>
+    <!-- Step 2: Password -->
+    <div id="step-password">
+      <div class="username-display">
+        <span class="ud-name" id="displayUsername"></span>
+        <span class="ud-change" onclick="backToUsername()">Change</span>
+      </div>
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" />
+      <button class="btn-login" id="btnLogin">Sign In</button>
+      <div class="error-msg"  id="passError"></div>
+      <div class="loading-msg" id="passLoading">Signing in...</div>
+    </div>
   </div>
 
   <!-- ── View 2: First-time password creation ── -->
@@ -293,21 +320,50 @@
     document.getElementById('sessionExpiredBanner').style.display = 'block';
   }
 
+  document.getElementById('btnContinue').addEventListener('click', probe);
+  document.getElementById('usernameInput').addEventListener('keydown', e => { if (e.key === 'Enter') probe(); });
   document.getElementById('btnLogin').addEventListener('click', login);
-  document.getElementById('usernameInput').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
   document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
   document.getElementById('btnSetPass').addEventListener('click', setPassword);
   document.getElementById('confirmPass').addEventListener('keydown', e => { if (e.key === 'Enter') setPassword(); });
+
+  async function probe() {
+    const username = document.getElementById('usernameInput').value.trim();
+    if (!username) { showError('errorMsg', 'Please enter your username.'); return; }
+    setLoading('btnContinue', 'loadingMsg', true);
+    hideError('errorMsg');
+    try {
+      const res  = await fetch('/api/auth/probe', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ username })
+      });
+      const data = await res.json();
+      if (data.first_time) {
+        firstTimeUserId = data.user_id;
+        document.getElementById('welcomeName').textContent = data.name;
+        showSetPassView();
+        return;
+      }
+      document.getElementById('step-username').style.display = 'none';
+      document.getElementById('step-password').style.display = 'block';
+      document.getElementById('displayUsername').textContent = username;
+      document.getElementById('password').focus();
+    } catch {
+      showError('errorMsg', 'Network error. Please check your connection.');
+    } finally {
+      setLoading('btnContinue', 'loadingMsg', false);
+    }
+  }
 
   async function login() {
     const username = document.getElementById('usernameInput').value.trim();
     const password = document.getElementById('password').value;
 
-    if (!username) { showError('errorMsg', 'Please enter your username.'); return; }
-    if (!password) { showError('errorMsg', 'Please enter your password.'); return; }
+    if (!password) { showError('passError', 'Please enter your password.'); return; }
 
-    setLoading('btnLogin', 'loadingMsg', true);
-    hideError('errorMsg');
+    setLoading('btnLogin', 'passLoading', true);
+    hideError('passError');
 
     try {
       const res  = await fetch('/api/auth/login', {
@@ -317,21 +373,22 @@
       });
       const data = await res.json();
 
-      if (data.first_time) {
-        firstTimeUserId = data.user_id;
-        document.getElementById('welcomeName').textContent = data.name;
-        showSetPassView();
-        return;
-      }
-
-      if (!res.ok) { showError('errorMsg', data.error || 'Sign in failed.'); return; }
+      if (!res.ok) { showError('passError', data.error || 'Sign in failed.'); return; }
 
       storeAndRedirect(data);
     } catch {
-      showError('errorMsg', 'Network error. Please check your connection.');
+      showError('passError', 'Network error. Please check your connection.');
     } finally {
-      setLoading('btnLogin', 'loadingMsg', false);
+      setLoading('btnLogin', 'passLoading', false);
     }
+  }
+
+  function backToUsername() {
+    document.getElementById('step-password').style.display = 'none';
+    document.getElementById('step-username').style.display = '';
+    document.getElementById('password').value = '';
+    hideError('passError');
+    document.getElementById('usernameInput').focus();
   }
 
   async function setPassword() {
@@ -393,13 +450,17 @@
   }
 
   function showLoginView() {
-    document.getElementById('view-setpass').style.display = 'none';
-    document.getElementById('view-login').style.display   = '';
+    document.getElementById('view-setpass').style.display  = 'none';
+    document.getElementById('view-login').style.display    = '';
+    document.getElementById('step-username').style.display = '';
+    document.getElementById('step-password').style.display = 'none';
     firstTimeUserId = null;
     document.getElementById('usernameInput').value = '';
+    document.getElementById('password').value      = '';
     document.getElementById('newPass').value       = '';
     document.getElementById('confirmPass').value   = '';
     hideError('setPassError');
+    hideError('errorMsg');
   }
 
   function showError(id, msg) {
