@@ -12,7 +12,7 @@ Once deployed, see **[MANUAL.md](./MANUAL.md)** for a full guide on using the ap
 
 ## Demo mode
 
-A built-in **demo mode** runs the full app against an *isolated local database* — no Turso, no real data, nothing to break. Visit **`/preview`** to pick a role and jump straight in, or sign in with a demo account (all use password `demo1234`):
+A live demo is available at **https://teamly-x5g1.onrender.com/preview** — pick a role and jump straight in, or sign in manually. All demo accounts use password `demo1234`:
 
 | Role | Username |
 |---|---|
@@ -20,8 +20,6 @@ A built-in **demo mode** runs the full app against an *isolated local database* 
 | HOD | `alex` |
 | Approver | `maya` |
 | Employee | `jordan` |
-
-Run it locally with `npm run demo`, then open `http://localhost:3000/preview`.
 
 ---
 
@@ -133,6 +131,8 @@ The schema is created automatically on first run. The app seeds a set of demo us
 
 ### Optional — deploy a public demo
 
+The live demo for this repo is at **https://teamly-x5g1.onrender.com/preview**.
+
 Want a shareable sandbox that can't touch your real data? Deploy a **second** Render web service from the same repo and set one variable:
 
 | Variable | Value |
@@ -195,7 +195,7 @@ npm run test:report               # open the last HTML report
 
 ## How it works (for the technical)
 
-**Auth** — bcrypt passwords + JWT signed with `JWT_SECRET`, stored in `localStorage`. Sessions expire in 8 hours. New users get `force_password_reset = 1` and set their own password on first login via a separate `/api/auth/set-password` route. Self-service password change available via `PUT /api/auth/change-password`.
+**Auth** — bcrypt passwords + JWT signed with `JWT_SECRET`, stored in `localStorage`. Sessions expire in 8 hours. Login is two-step: username → `POST /api/auth/probe` detects `force_password_reset` before the password field appears — first-time users go straight to the set-password view, returning users enter their password in step 2. Self-service password change available via `PUT /api/auth/change-password`.
 
 **Database** — Turso is libSQL (SQLite-compatible) hosted serverlessly. The app connects via `@libsql/client`. Schema and column migrations run automatically on start via `initDB()`. No separate migration tool needed.
 
@@ -214,7 +214,7 @@ npm run test:report               # open the last HTML report
 ```
 server.js          — Express server, all API routes, email helpers, cron jobs
 public/
-  login.html       — Login page (username + password)
+  login.html       — Login page (two-step: username probe → password or first-time setup)
   dashboard.html   — Employee console (Alpine.js) — leave, WFH, claims, clock, calendar
   admin.html       — Admin / approver console
   favicon.svg      — App icon
