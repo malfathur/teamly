@@ -2704,6 +2704,172 @@ async function seedDemoData() {
   console.log('[Teamly] Demo sample data seeded.');
 }
 
+// ─── AI ANALYTICS ─────────────────────────────────────────────────────────────
+
+app.post('/api/ai/analytics', requireAuth, requireRole('superadmin', 'hod', 'approver_a'), async (req, res) => {
+  const { span = 'month', modules = ['claims', 'leaves', 'wfh'] } = req.body;
+  const role   = req.user.role;
+  const userId = req.user.id;
+
+  // Date range
+  const now = new Date();
+  let from, to;
+  if (span === 'week') {
+    const dow = now.getDay() === 0 ? 6 : now.getDay() - 1;
+    from = new Date(now); from.setDate(now.getDate() - dow); from.setHours(0,0,0,0);
+    to   = new Date(from); to.setDate(from.getDate() + 6);
+  } else if (span === 'year') {
+    from = new Date(now.getFullYear(), 0, 1);
+    to   = new Date(now.getFullYear(), 11, 31);
+  } else {
+    from = new Date(now.getFullYear(), now.getMonth(), 1);
+    to   = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  }
+  const fromStr = from.toISOString().slice(0, 10);
+  const toStr   = to.toISOString().slice(0, 10);
+
+  // HOD department scope
+  let hodDept = null;
+  if (role === 'hod') {
+    const r = await db.execute({ sql: 'SELECT department FROM users WHERE id = ?', args: [userId] });
+    hodDept = r.rows[0]?.department || null;
+  }
+
+  const data = {};
+
+  // Claims — superadmin sees all; approver_a sees their assigned claimants
+  if (modules.includes('claims') && (role === 'superadmin' || role === 'approver_a')) {
+    const scopeWhere = role === 'approver_a' ? 'AND u.claim_approver_id = ?' : '';
+    const scopeArgs  = role === 'approver_a' ? [userId] : [];
+
+    const byPerson = await db.execute({
+      sql: `SELECT u.name, u.department,
+                   SUM(c.amount) AS total_amount, COUNT(*) AS count
+            FROM claims c JOIN users u ON c.user_id = u.id
+            WHERE DATE(c.created_at) BETWEEN ? AND ?
+              AND c.status NOT IN ('cancelled','rejected')
+              ${scopeWhere}
+            GROUP BY u.id ORDER BY total_amount DESC`,
+      args: [fromStr, toStr, ...scopeArgs]
+    });
+    const byDept = await db.execute({
+      sql: `SELECT u.department,
+                   SUM(c.amount) AS total_amount, COUNT(*) AS count
+            FROM claims c JOIN users u ON c.user_id = u.id
+            WHERE DATE(c.created_at) BETWEEN ? AND ?
+              AND c.status NOT IN ('cancelled','rejected')
+              ${scopeWhere}
+            GROUP BY u.department ORDER BY total_amount DESC`,
+      args: [fromStr, toStr, ...scopeArgs]
+    });
+    data.claims = {
+      by_person: byPerson.rows,
+      by_dept:   byDept.rows,
+      total:     byPerson.rows.reduce((s, x) => s + (x.total_amount || 0), 0)
+    };
+  }
+
+  // Non-AL leaves — superadmin sees all; hod sees their dept
+  if (modules.includes('leaves') && (role === 'superadmin' || role === 'hod')) {
+    const scopeWhere = (role === 'hod' && hodDept) ? 'AND u.department = ?' : '';
+    const scopeArgs  = (role === 'hod' && hodDept) ? [hodDept] : [];
+
+    const raw = await db.execute({
+      sql: `SELECT u.name, u.department, lr.type,
+                   SUM(lr.days_count) AS total_days, COUNT(*) AS count
+            FROM leave_requests lr JOIN users u ON lr.user_id = u.id
+            WHERE lr.type IN ('sick','emergency','comp_off','UPL')
+              AND lr.start_date BETWEEN ? AND ?
+              AND lr.status = 'approved'
+              ${scopeWhere}
+            GROUP BY u.id, lr.type ORDER BY total_days DESC`,
+      args: [fromStr, toStr, ...scopeArgs]
+    });
+
+    // Roll up per person
+    const personMap = {};
+    for (const row of raw.rows) {
+      if (!personMap[row.name]) personMap[row.name] = { name: row.name, department: row.department, total_days: 0, breakdown: {} };
+      personMap[row.name].total_days += row.total_days;
+      personMap[row.name].breakdown[row.type] = (personMap[row.name].breakdown[row.type] || 0) + row.total_days;
+    }
+    data.leaves = {
+      by_person: Object.values(personMap).sort((a, b) => b.total_days - a.total_days)
+    };
+  }
+
+  // WFH — superadmin sees all; hod sees their dept
+  if (modules.includes('wfh') && (role === 'superadmin' || role === 'hod')) {
+    const scopeWhere = (role === 'hod' && hodDept) ? 'AND u.department = ?' : '';
+    const scopeArgs  = (role === 'hod' && hodDept) ? [hodDept] : [];
+
+    const r = await db.execute({
+      sql: `SELECT u.name, u.department, COUNT(*) AS count
+            FROM wfh_requests w JOIN users u ON w.user_id = u.id
+            WHERE w.date BETWEEN ? AND ?
+              AND w.status = 'approved'
+              ${scopeWhere}
+            GROUP BY u.id ORDER BY count DESC`,
+      args: [fromStr, toStr, ...scopeArgs]
+    });
+    data.wfh = { by_person: r.rows };
+  }
+
+  // Build Groq context
+  const spanLabel = { week: 'this week', month: 'this month', year: 'this year' }[span];
+  let ctx = `You are an HR analytics assistant for a company. Analyse the workforce data below for ${spanLabel} (${fromStr} to ${toStr}). Provide concise, actionable management insights. Flag anomalies, patterns, and risks. Use bullet points. Be specific with names and numbers.\n\n`;
+
+  if (data.claims) {
+    ctx += `**Expense Claims** — Total: RM${data.claims.total.toFixed(2)}\n`;
+    ctx += `By department:\n${data.claims.by_dept.map(d => `- ${d.department || 'Unknown'}: RM${(d.total_amount||0).toFixed(2)} (${d.count} claims)`).join('\n')}\n`;
+    ctx += `By person:\n${data.claims.by_person.map(p => `- ${p.name} (${p.department || '?'}): RM${(p.total_amount||0).toFixed(2)} (${p.count} claims)`).join('\n')}\n\n`;
+  }
+
+  if (data.leaves) {
+    ctx += `**Non-AL Leaves** (Sick / Emergency / Comp Off / UPL)\nBy person:\n`;
+    ctx += data.leaves.by_person.map(p => {
+      const bd = Object.entries(p.breakdown).map(([t, d]) => `${t}: ${d}d`).join(', ');
+      return `- ${p.name} (${p.department || '?'}): ${p.total_days} days [${bd}]`;
+    }).join('\n') + '\n\n';
+  }
+
+  if (data.wfh) {
+    ctx += `**WFH Days**\nBy person:\n`;
+    ctx += data.wfh.by_person.map(p => `- ${p.name} (${p.department || '?'}): ${p.count} WFH days`).join('\n') + '\n\n';
+  }
+
+  if (!ctx.includes('**')) {
+    return res.json({ data, insight: null, error: 'No data modules available for your role.', period: { from: fromStr, to: toStr } });
+  }
+
+  // Groq call
+  let insight = null, error = null;
+  const groqKey = process.env.GROQ_API_KEY;
+  if (groqKey) {
+    try {
+      const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [{ role: 'user', content: ctx }],
+          temperature: 0.3,
+          max_tokens: 800
+        })
+      });
+      const gd = await groqRes.json();
+      if (!groqRes.ok) throw new Error(gd.error?.message || 'Groq error');
+      insight = gd.choices?.[0]?.message?.content || 'No insight returned.';
+    } catch (e) {
+      error = `AI unavailable: ${e.message}`;
+    }
+  } else {
+    error = 'GROQ_API_KEY not configured.';
+  }
+
+  res.json({ data, insight, error, period: { from: fromStr, to: toStr } });
+});
+
 // ─── START ────────────────────────────────────────────────────────────────────
 
 async function start() {

@@ -194,6 +194,7 @@
     <button class="tab-btn" id="tab-holidays" onclick="setTab('holidays')" style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#94a3b8;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">Public Holidays</button>
     <button class="tab-btn" id="tab-blackout" onclick="setTab('blackout')" style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#94a3b8;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">Blackout Dates</button>
     <button class="tab-btn" id="tab-export"   onclick="setTab('export')"   style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#94a3b8;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">CSV Export</button>
+    <button class="tab-btn" id="tab-insights" onclick="setTab('insights')" style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#94a3b8;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">✦ AI Insights</button>
     <button class="tab-btn" id="tab-reset"    onclick="setTab('reset')"    style="padding:13px 18px;font-size:0.85rem;font-weight:600;font-family:'Open Sans',sans-serif;color:#dc2626;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s;">DB Reset</button>
   </div>
 </div>
@@ -790,6 +791,124 @@
     </div>
   </div><!-- /section-reset -->
 
+  <!-- ══ AI INSIGHTS TAB ══ -->
+  <div id="section-insights" style="display:none">
+
+    <div class="card">
+      <h2 style="display:flex;justify-content:space-between;align-items:center;">
+        AI Workforce Analytics
+        <span style="font-size:0.75rem;font-weight:400;color:#a0aec0;text-transform:none;letter-spacing:0;">Powered by Groq · Llama 3.3 70B</span>
+      </h2>
+
+      <!-- Controls -->
+      <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:20px;">
+        <div>
+          <label style="display:block;font-size:0.8rem;font-weight:700;color:#4a5568;margin-bottom:6px;">Time Span</label>
+          <div style="display:flex;gap:6px;">
+            <button onclick="setAiSpan('week')"  id="aiSpanWeek"  class="btn btn-sm" style="background:#e2e8f0;color:#4a5568;">Week</button>
+            <button onclick="setAiSpan('month')" id="aiSpanMonth" class="btn btn-sm" style="background:#4f46e5;color:#fff;">Month</button>
+            <button onclick="setAiSpan('year')"  id="aiSpanYear"  class="btn btn-sm" style="background:#e2e8f0;color:#4a5568;">Year</button>
+          </div>
+        </div>
+        <div id="aiModuleToggles">
+          <label style="display:block;font-size:0.8rem;font-weight:700;color:#4a5568;margin-bottom:6px;">Modules</label>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;cursor:pointer;"><input type="checkbox" id="aiModClaims" checked /> Claims</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;cursor:pointer;"><input type="checkbox" id="aiModLeaves" checked /> Non-AL Leaves</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;cursor:pointer;"><input type="checkbox" id="aiModWfh"    checked /> WFH</label>
+          </div>
+        </div>
+        <button onclick="runAiAnalytics()" id="aiRunBtn" class="btn btn-primary" style="padding:10px 24px;">
+          Analyse
+        </button>
+      </div>
+
+      <div id="aiPeriodLabel" style="font-size:0.8rem;color:#718096;margin-bottom:16px;display:none;"></div>
+
+      <!-- AI Insight -->
+      <div id="aiInsightBox" style="display:none;background:linear-gradient(135deg,#eef2ff 0%,#f0fdf4 100%);border:1px solid #c7d2fe;border-radius:10px;padding:20px 24px;margin-bottom:20px;">
+        <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6366f1;margin-bottom:10px;">✦ AI Analysis</div>
+        <div id="aiInsightText" style="font-size:0.9rem;line-height:1.7;color:#1e293b;white-space:pre-wrap;"></div>
+      </div>
+
+      <div id="aiErrorBox" style="display:none;" class="toast error"></div>
+
+      <!-- Raw Data (collapsible) -->
+      <div id="aiRawSection" style="display:none;">
+        <button onclick="toggleAiRaw()" id="aiRawToggleBtn"
+          style="width:100%;text-align:left;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 16px;font-size:0.85rem;font-weight:600;color:#4a5568;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:0;">
+          <span>Raw Data</span>
+          <span id="aiRawChevron">▼</span>
+        </button>
+        <div id="aiRawBody" style="display:none;margin-top:12px;">
+
+          <!-- Claims raw -->
+          <div id="aiRawClaims" style="display:none;margin-bottom:20px;">
+            <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#718096;margin-bottom:8px;">Claims</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <div style="font-size:0.75rem;font-weight:600;color:#a0aec0;margin-bottom:6px;">By Department</div>
+                <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+                  <thead><tr>
+                    <th style="text-align:left;padding:6px 8px;color:#718096;font-weight:600;border-bottom:2px solid #e2e8f0;">Dept</th>
+                    <th style="text-align:right;padding:6px 8px;color:#718096;font-weight:600;border-bottom:2px solid #e2e8f0;">Amount</th>
+                    <th style="text-align:right;padding:6px 8px;color:#718096;font-weight:600;border-bottom:2px solid #e2e8f0;">Count</th>
+                  </tr></thead>
+                  <tbody id="aiClaimsDeptBody"></tbody>
+                </table></div>
+              </div>
+              <div>
+                <div style="font-size:0.75rem;font-weight:600;color:#a0aec0;margin-bottom:6px;">By Person</div>
+                <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+                  <thead><tr>
+                    <th style="text-align:left;padding:6px 8px;color:#718096;font-weight:600;border-bottom:2px solid #e2e8f0;">Employee</th>
+                    <th style="text-align:right;padding:6px 8px;color:#718096;font-weight:600;border-bottom:2px solid #e2e8f0;">Amount</th>
+                    <th style="text-align:right;padding:6px 8px;color:#718096;font-weight:600;border-bottom:2px solid #e2e8f0;">Count</th>
+                  </tr></thead>
+                  <tbody id="aiClaimsPersonBody"></tbody>
+                </table></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Leaves raw -->
+          <div id="aiRawLeaves" style="display:none;margin-bottom:20px;">
+            <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#718096;margin-bottom:8px;">Non-AL Leaves</div>
+            <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+              <thead><tr>
+                <th style="text-align:left;padding:6px 8px;color:#718096;font-weight:600;border-bottom:2px solid #e2e8f0;">Employee</th>
+                <th style="text-align:left;padding:6px 8px;color:#718096;font-weight:600;border-bottom:2px solid #e2e8f0;">Dept</th>
+                <th style="text-align:right;padding:6px 8px;color:#718096;font-weight:600;border-bottom:2px solid #e2e8f0;">Total Days</th>
+                <th style="text-align:left;padding:6px 8px;color:#718096;font-weight:600;border-bottom:2px solid #e2e8f0;">Breakdown</th>
+              </tr></thead>
+              <tbody id="aiLeavesBody"></tbody>
+            </table></div>
+          </div>
+
+          <!-- WFH raw -->
+          <div id="aiRawWfh" style="display:none;margin-bottom:8px;">
+            <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#718096;margin-bottom:8px;">WFH</div>
+            <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+              <thead><tr>
+                <th style="text-align:left;padding:6px 8px;color:#718096;font-weight:600;border-bottom:2px solid #e2e8f0;">Employee</th>
+                <th style="text-align:left;padding:6px 8px;color:#718096;font-weight:600;border-bottom:2px solid #e2e8f0;">Dept</th>
+                <th style="text-align:right;padding:6px 8px;color:#718096;font-weight:600;border-bottom:2px solid #e2e8f0;">WFH Days</th>
+              </tr></thead>
+              <tbody id="aiWfhBody"></tbody>
+            </table></div>
+          </div>
+
+        </div>
+      </div>
+
+      <div id="aiLoadingBox" style="display:none;text-align:center;padding:32px;color:#718096;">
+        <div style="font-size:1.5rem;margin-bottom:8px;">⏳</div>
+        <div>Analysing data…</div>
+      </div>
+    </div>
+
+  </div><!-- /section-insights -->
+
 </div><!-- /container -->
 
 <!-- Edit User Modal -->
@@ -909,6 +1028,8 @@
     'Content-Type':  'application/json',
     'Authorization': `Bearer ${token}`
   };
+
+  initAiModuleVisibility();
 
   let allUsers = [];
 
@@ -1099,7 +1220,7 @@
   }
 
   // ── Tab switching ────────────────────────────────────────────────────────────
-  const TABS = ['overview', 'users', 'balances', 'claims', 'tracking', 'holidays', 'blackout', 'export', 'clock', 'reset'];
+  const TABS = ['overview', 'users', 'balances', 'claims', 'tracking', 'holidays', 'blackout', 'export', 'clock', 'reset', 'insights'];
 
   function setTab(name) {
     TABS.forEach(t => {
@@ -1110,6 +1231,7 @@
         btn.style.borderBottomColor = (t === name) ? '#4f46e5' : 'transparent';
         btn.style.color = (t === name) ? '#4f46e5' : (t === 'reset' ? '#dc2626' : '#94a3b8');
       }
+
     });
     if (name === 'overview')  loadOverview();
     if (name === 'balances')  loadBalances();
@@ -2280,6 +2402,159 @@
       closeOverrideModal();
       if (typeof reloadFn === 'function') reloadFn();
     } catch { showToast('overrideToast', 'Network error.', 'error'); }
+  }
+
+  // ── AI Analytics ─────────────────────────────────────────────────────────────
+  let aiSpan = 'month';
+
+  function setAiSpan(s) {
+    aiSpan = s;
+    ['week','month','year'].forEach(v => {
+      const btn = document.getElementById('aiSpan' + v.charAt(0).toUpperCase() + v.slice(1));
+      btn.style.background = v === s ? '#4f46e5' : '#e2e8f0';
+      btn.style.color      = v === s ? '#fff'    : '#4a5568';
+    });
+  }
+
+  function toggleAiRaw() {
+    const body    = document.getElementById('aiRawBody');
+    const chevron = document.getElementById('aiRawChevron');
+    const open    = body.style.display === '';
+    body.style.display    = open ? 'none' : '';
+    chevron.textContent   = open ? '▼' : '▲';
+  }
+
+  async function runAiAnalytics() {
+    const modules = [];
+    if (document.getElementById('aiModClaims').checked) modules.push('claims');
+    if (document.getElementById('aiModLeaves').checked) modules.push('leaves');
+    if (document.getElementById('aiModWfh').checked)    modules.push('wfh');
+    if (!modules.length) { alert('Select at least one module.'); return; }
+
+    // Reset UI
+    document.getElementById('aiInsightBox').style.display  = 'none';
+    document.getElementById('aiErrorBox').style.display    = 'none';
+    document.getElementById('aiRawSection').style.display  = 'none';
+    document.getElementById('aiPeriodLabel').style.display = 'none';
+    document.getElementById('aiLoadingBox').style.display  = '';
+    document.getElementById('aiRunBtn').disabled = true;
+
+    try {
+      const res  = await fetch('/api/ai/analytics', {
+        method: 'POST',
+        headers: { ...authHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ span: aiSpan, modules })
+      });
+      const json = await res.json();
+      document.getElementById('aiLoadingBox').style.display = 'none';
+      document.getElementById('aiRunBtn').disabled = false;
+
+      if (!res.ok) {
+        document.getElementById('aiErrorBox').textContent = json.error || 'Request failed.';
+        document.getElementById('aiErrorBox').style.display = '';
+        return;
+      }
+
+      document.getElementById('aiPeriodLabel').textContent = `Period: ${json.period.from} → ${json.period.to}`;
+      document.getElementById('aiPeriodLabel').style.display = '';
+
+      if (json.insight) {
+        document.getElementById('aiInsightText').textContent = json.insight;
+        document.getElementById('aiInsightBox').style.display = '';
+      }
+      if (json.error) {
+        document.getElementById('aiErrorBox').textContent = json.error;
+        document.getElementById('aiErrorBox').style.display = '';
+      }
+
+      renderAiRaw(json.data);
+
+    } catch {
+      document.getElementById('aiLoadingBox').style.display = 'none';
+      document.getElementById('aiRunBtn').disabled = false;
+      document.getElementById('aiErrorBox').textContent = 'Network error.';
+      document.getElementById('aiErrorBox').style.display = '';
+    }
+  }
+
+  function renderAiRaw(data) {
+    let hasAny = false;
+
+    if (data.claims) {
+      hasAny = true;
+      document.getElementById('aiRawClaims').style.display = '';
+      document.getElementById('aiClaimsDeptBody').innerHTML = data.claims.by_dept.length
+        ? data.claims.by_dept.map(d => `<tr>
+            <td style="padding:6px 8px;border-bottom:1px solid #f0f4f8;">${d.department || '—'}</td>
+            <td style="padding:6px 8px;border-bottom:1px solid #f0f4f8;text-align:right;">RM${(d.total_amount||0).toFixed(2)}</td>
+            <td style="padding:6px 8px;border-bottom:1px solid #f0f4f8;text-align:right;">${d.count}</td>
+          </tr>`).join('')
+        : `<tr><td colspan="3" style="padding:12px;color:#a0aec0;text-align:center;">No data</td></tr>`;
+      document.getElementById('aiClaimsPersonBody').innerHTML = data.claims.by_person.length
+        ? data.claims.by_person.map(p => `<tr>
+            <td style="padding:6px 8px;border-bottom:1px solid #f0f4f8;">${p.name}<br><span style="font-size:0.75rem;color:#a0aec0;">${p.department||''}</span></td>
+            <td style="padding:6px 8px;border-bottom:1px solid #f0f4f8;text-align:right;">RM${(p.total_amount||0).toFixed(2)}</td>
+            <td style="padding:6px 8px;border-bottom:1px solid #f0f4f8;text-align:right;">${p.count}</td>
+          </tr>`).join('')
+        : `<tr><td colspan="3" style="padding:12px;color:#a0aec0;text-align:center;">No data</td></tr>`;
+    } else {
+      document.getElementById('aiRawClaims').style.display = 'none';
+    }
+
+    if (data.leaves) {
+      hasAny = true;
+      document.getElementById('aiRawLeaves').style.display = '';
+      document.getElementById('aiLeavesBody').innerHTML = data.leaves.by_person.length
+        ? data.leaves.by_person.map(p => {
+            const bd = Object.entries(p.breakdown).map(([t, d]) => `${t}: ${d}d`).join(', ');
+            return `<tr>
+              <td style="padding:6px 8px;border-bottom:1px solid #f0f4f8;">${p.name}</td>
+              <td style="padding:6px 8px;border-bottom:1px solid #f0f4f8;color:#718096;">${p.department||'—'}</td>
+              <td style="padding:6px 8px;border-bottom:1px solid #f0f4f8;text-align:right;font-weight:600;">${p.total_days}</td>
+              <td style="padding:6px 8px;border-bottom:1px solid #f0f4f8;color:#718096;font-size:0.82rem;">${bd}</td>
+            </tr>`;
+          }).join('')
+        : `<tr><td colspan="4" style="padding:12px;color:#a0aec0;text-align:center;">No data</td></tr>`;
+    } else {
+      document.getElementById('aiRawLeaves').style.display = 'none';
+    }
+
+    if (data.wfh) {
+      hasAny = true;
+      document.getElementById('aiRawWfh').style.display = '';
+      document.getElementById('aiWfhBody').innerHTML = data.wfh.by_person.length
+        ? data.wfh.by_person.map(p => `<tr>
+            <td style="padding:6px 8px;border-bottom:1px solid #f0f4f8;">${p.name}</td>
+            <td style="padding:6px 8px;border-bottom:1px solid #f0f4f8;color:#718096;">${p.department||'—'}</td>
+            <td style="padding:6px 8px;border-bottom:1px solid #f0f4f8;text-align:right;font-weight:600;">${p.count}</td>
+          </tr>`).join('')
+        : `<tr><td colspan="3" style="padding:12px;color:#a0aec0;text-align:center;">No data</td></tr>`;
+    } else {
+      document.getElementById('aiRawWfh').style.display = 'none';
+    }
+
+    if (hasAny) {
+      document.getElementById('aiRawSection').style.display = '';
+      // keep collapsed by default
+      document.getElementById('aiRawBody').style.display = 'none';
+      document.getElementById('aiRawChevron').textContent = '▼';
+    }
+  }
+
+  // Role-gate module checkboxes based on current user
+  function initAiModuleVisibility() {
+    const role = (me?.role || '');
+    const showClaims = role === 'superadmin' || role === 'approver_a';
+    const showLeaves = role === 'superadmin' || role === 'hod';
+    const showWfh    = role === 'superadmin' || role === 'hod';
+    document.getElementById('aiModClaims').closest('label').style.display = showClaims ? '' : 'none';
+    document.getElementById('aiModLeaves').closest('label').style.display = showLeaves ? '' : 'none';
+    document.getElementById('aiModWfh').closest('label').style.display    = showWfh    ? '' : 'none';
+    if (!showClaims) document.getElementById('aiModClaims').checked = false;
+    if (!showLeaves) document.getElementById('aiModLeaves').checked = false;
+    if (!showWfh)    document.getElementById('aiModWfh').checked    = false;
+    // If only one module available, check it
+    if (showClaims && !showLeaves && !showWfh) document.getElementById('aiModClaims').checked = true;
   }
 
   // ── Init ─────────────────────────────────────────────────────────────────────
