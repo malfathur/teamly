@@ -115,7 +115,10 @@
         }
         localStorage.setItem('teamly_token', data.token);
         localStorage.setItem('teamly_user',  JSON.stringify(data.user));
-        window.location.href = data.user.role === 'superadmin' ? '/admin.html' : '/dashboard.html';
+        // superadmin / hod / approver_a use the admin console (where AI Insights lives);
+        // plain employees go to the user dashboard.
+        const consoleRoles = ['superadmin', 'hod', 'approver_a'];
+        window.location.href = consoleRoles.includes(data.user.role) ? '/admin.html' : '/dashboard.html';
       } catch {
         showErr('Network error. Please try again.');
       }

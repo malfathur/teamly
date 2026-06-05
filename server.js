@@ -2586,35 +2586,6 @@ cron.schedule('0 8 * * *', async () => {
   }
 }, { timezone: 'UTC' });
 
-// ─── 404 FALLBACK ─────────────────────────────────────────────────────────────
-
-app.use((req, res) => {
-  res.status(404).send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>404 — Teamly</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #008181; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-    .card { background: #fff; border-radius: 16px; padding: 44px 40px; text-align: center; max-width: 380px; box-shadow: 0 4px 24px rgba(0,0,0,0.10); }
-    h1 { font-size: 4rem; color: #008181; font-weight: 900; }
-    p  { color: #4a5568; margin: 12px 0 28px; }
-    a  { display: inline-block; padding: 12px 28px; background: #008181; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; }
-    a:hover { opacity: 0.85; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h1>404</h1>
-    <p>This page doesn't exist.</p>
-    <a href="/">Back to login</a>
-  </div>
-</body>
-</html>`);
-});
-
 // ─── DEMO SEED ──────────────────────────────────────────────────────────────
 // Only runs when DEMO_MODE is on. Gives every seeded account a known password
 // (so visitors can log straight in) and populates sample activity so each
@@ -2868,6 +2839,36 @@ app.post('/api/ai/analytics', requireAuth, requireRole('superadmin', 'hod', 'app
   }
 
   res.json({ data, insight, error, period: { from: fromStr, to: toStr } });
+});
+
+// ─── 404 FALLBACK ─────────────────────────────────────────────────────────────
+// Must stay last — this catch-all swallows any route registered after it.
+
+app.use((req, res) => {
+  res.status(404).send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — Teamly</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #008181; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card { background: #fff; border-radius: 16px; padding: 44px 40px; text-align: center; max-width: 380px; box-shadow: 0 4px 24px rgba(0,0,0,0.10); }
+    h1 { font-size: 4rem; color: #008181; font-weight: 900; }
+    p  { color: #4a5568; margin: 12px 0 28px; }
+    a  { display: inline-block; padding: 12px 28px; background: #008181; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; }
+    a:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>404</h1>
+    <p>This page doesn't exist.</p>
+    <a href="/">Back to login</a>
+  </div>
+</body>
+</html>`);
 });
 
 // ─── START ────────────────────────────────────────────────────────────────────
